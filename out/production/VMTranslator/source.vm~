@@ -1,0 +1,12 @@
+// asdfasf
+  // asdf
+
+push constant 1 // asdfa
+push constant 2
+pop local 0
+// label x
+// goto y
+// if-goto z
+function func 2
+call func 2
+return
