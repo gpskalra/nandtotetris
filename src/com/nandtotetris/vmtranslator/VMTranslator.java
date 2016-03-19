@@ -103,7 +103,7 @@ public class VMTranslator {
 
                 case C_ARITHMETIC:
 
-                    codeWriter.writeArithmetic(parser.getCurrentCommand());
+                    codeWriter.writeArithmetic(parser.arg1());
                     break;
 
                 case C_PUSH:
@@ -119,10 +119,18 @@ public class VMTranslator {
 
                 case C_FUNCTION:
 
+                    codeWriter.setCurrentFunctionName(parser.arg1());
+                    codeWriter.writeFunction(parser.arg1(),parser.arg2());
                     break;
 
                 case C_RETURN:
 
+                    codeWriter.writeReturn();
+                    break;
+
+                case C_LABEL:
+
+                    codeWriter.writeLabel(parser.arg1());
                     break;
 
                 case C_GOTO:
@@ -130,10 +138,6 @@ public class VMTranslator {
                     break;
 
                 case C_IF:
-
-                    break;
-
-                case C_LABEL:
 
                     break;
 

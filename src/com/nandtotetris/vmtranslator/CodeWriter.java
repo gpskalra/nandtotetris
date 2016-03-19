@@ -19,7 +19,9 @@ public class CodeWriter {
 
     private PrintWriter mOutputFile;
 
-    private String mCurrentVMFileName;
+    private String mCurrentFileName;
+
+    private String mCurrentFunctionName;
 
     // A running count of the number of logical vm commands
     // (eq,gt,lt) encountered. This is used to define unique
@@ -60,7 +62,16 @@ public class CodeWriter {
      *                  vm file
      */
     public void setCurrentFile(File newVMFile) {
-        mCurrentVMFileName = newVMFile.getName().replaceAll(".vm","");
+        mCurrentFileName = newVMFile.getName().replaceAll(".vm","");
+    }
+
+    /**
+     * Used by label, goto and if-goto commands to append function
+     * name to the label.
+     * @param functionName the name of the function
+     */
+    public void setCurrentFunctionName(String functionName) {
+        mCurrentFunctionName = functionName;
     }
 
     /**
@@ -634,7 +645,7 @@ public class CodeWriter {
                     case "static" :
 
                         // D=M[filename.index]
-                        mOutputFile.println("@" + mCurrentVMFileName + "." + Integer.toString(index));
+                        mOutputFile.println("@" + mCurrentFileName + "." + Integer.toString(index));
                         mOutputFile.println("D=M");
 
                         // M[SP]=D
@@ -848,7 +859,7 @@ public class CodeWriter {
                         mOutputFile.println("D=M");
 
                         // M[filename.index]=D
-                        mOutputFile.println("@" + mCurrentVMFileName + "." + Integer.toString(index));
+                        mOutputFile.println("@" + mCurrentFileName + "." + Integer.toString(index));
                         mOutputFile.println("M=D");
 
                         break;
@@ -876,12 +887,226 @@ public class CodeWriter {
 
         // push return address to stack
         String returnLabel = "RETURN_" + functionName + "_" + Integer.toString(mFunctionCallCount);
+
+        // D=return address
         mOutputFile.println("@"+ returnLabel);
+        mOutputFile.println("D=A");
 
+        // M[SP]=D
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("M=D");
 
+        // SP=SP+1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M+1");
 
+        // push LCL
+        mOutputFile.println("@LCL");
+        mOutputFile.println("D=M");
+
+        // M[SP]=D
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("M=D");
+
+        // SP=SP+1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M+1");
+
+        // push ARG
+        mOutputFile.println("@ARG");
+        mOutputFile.println("D=M");
+
+        // M[SP]=D
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("M=D");
+
+        // SP=SP+1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M+1");
+
+        // push THIS
+        mOutputFile.println("@THIS");
+        mOutputFile.println("D=M");
+
+        // M[SP]=D
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("M=D");
+
+        // SP=SP+1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M+1");
+
+        // push THAT
+        mOutputFile.println("@THAT");
+        mOutputFile.println("D=M");
+
+        // M[SP]=D
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("M=D");
+
+        // SP=SP+1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M+1");
+
+        // D=numArgs+5
+        mOutputFile.println("@" + Integer.toString(numArgs+5));
+        mOutputFile.println("D=A");
+
+        // D=SP-(numArgs+5)
+        mOutputFile.println("@SP");
+        mOutputFile.println("D=M-D");
+
+        // ARG=D
+        mOutputFile.println("@ARG");
+        mOutputFile.println("M=D");
+
+        // D=SP
+        mOutputFile.println("@SP");
+        mOutputFile.println("D=M");
+
+        // LCL=D
+        mOutputFile.println("@LCL");
+        mOutputFile.println("M=D");
+
+        // transfer control to function
+        mOutputFile.println("@" + functionName);
+        mOutputFile.println("0;JMP");
+
+        // return label
         mOutputFile.println("(" + returnLabel + ")");
 
+        mFunctionCallCount = mFunctionCallCount + 1;
+
+        mOutputFile.flush();
+    }
+
+    /**
+     * Writes assembly code that effects the function command
+     *
+     * @param functionName The name of the function declared.
+     *                     It is always of the form
+     *                     fileName.UnqualifiedFunctionName
+     * @param numLocals The number of local variables in the function
+     */
+    public void writeFunction(String functionName,int numLocals) {
+
+        mOutputFile.println("(" + functionName + ")");
+        mOutputFile.flush();
+
+        for (int i=0;i<numLocals;i++) {
+            writePushPop(CommandTypeVM.C_PUSH,"constant",0);
+        }
+
+    }
+
+    /**
+     * Writes assembly code that effects the return command.
+     */
+    public void writeReturn() {
+
+        // push return value to stack
+
+        // SP=SP-1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M-1");
+
+        // D=M[SP]
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("D=M");
+
+        // M[ARG]=D
+        mOutputFile.println("@ARG");
+        mOutputFile.println("A=M");
+        mOutputFile.println("M=D");
+
+        // SP=ARG+1
+        mOutputFile.println("@ARG");
+        mOutputFile.println("D=M+1");
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=D");
+
+        // R13=M[LCL-5] (return address)
+        mOutputFile.println("@5");
+        mOutputFile.println("D=A");
+        mOutputFile.println("@LCL");
+        mOutputFile.println("A=A-D");
+        mOutputFile.println("D=M");
+        mOutputFile.println("@R13");
+        mOutputFile.println("M=D");
+
+        // restore THAT,THIS,ARG,LCL
+
+        // LCL=LCL-1
+        mOutputFile.println("@LCL");
+        mOutputFile.println("M=M-1");
+
+        // THAT = M[LCL]
+        mOutputFile.println("@LCL");
+        mOutputFile.println("A=M");
+        mOutputFile.println("D=M");
+
+        mOutputFile.println("@THAT");
+        mOutputFile.println("M=D");
+
+        // LCL=LCL-1
+        mOutputFile.println("@LCL");
+        mOutputFile.println("M=M-1");
+
+        // THIS = M[LCL]
+        mOutputFile.println("@LCL");
+        mOutputFile.println("A=M");
+        mOutputFile.println("D=M");
+
+        mOutputFile.println("@THIS");
+        mOutputFile.println("M=D");
+
+        // LCL=LCL-1
+        mOutputFile.println("@LCL");
+        mOutputFile.println("M=M-1");
+
+        // ARG = M[LCL]
+        mOutputFile.println("@LCL");
+        mOutputFile.println("A=M");
+        mOutputFile.println("D=M");
+
+        mOutputFile.println("@ARG");
+        mOutputFile.println("M=D");
+
+        // LCL=LCL-1
+        mOutputFile.println("@LCL");
+        mOutputFile.println("M=M-1");
+
+        // LCL=M[LCL]
+        mOutputFile.println("@LCL");
+        mOutputFile.println("A=M");
+        mOutputFile.println("D=M");
+
+        mOutputFile.println("@LCL");
+        mOutputFile.println("M=D");
+
+        // jump to R13
+        mOutputFile.println("@R13");
+        mOutputFile.println("A=M");
+        mOutputFile.println("0;JMP");
+
+        mOutputFile.flush();
+    }
+
+    /**
+     * Writes assembly code that effects the label command
+     * @param label the input label string
+     */
+    public void writeLabel(String label) {
+
+        String labelQualifiedWithFunctionName = mCurrentFunctionName + "$" + label;
+
+        mOutputFile.println("(" + labelQualifiedWithFunctionName + ")");
         mOutputFile.flush();
     }
 
