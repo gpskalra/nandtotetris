@@ -70,7 +70,7 @@ public class CodeWriter {
      * name to the label.
      * @param functionName the name of the function
      */
-    public void setCurrentFunctionName(String functionName) {
+    public void setCurrentFunction(String functionName) {
         mCurrentFunctionName = functionName;
     }
 
@@ -135,6 +135,38 @@ public class CodeWriter {
         mOutputFile.println(line);
         mOutputFile.flush();
 
+    }
+
+    /**
+     * Writes assembly code that effects the VM initialisation, also called
+     * bootstrap code. Placed at the beginning of the output file.
+     */
+    public void writeInit() {
+
+        // SP=256
+        mOutputFile.println("@256");
+        mOutputFile.println("D=A");
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=D");
+
+        // call Sys.init
+        writeCall("Sys.init",0);
+
+        // write Sys.init function
+        writeFunction("Sys.init",0);
+
+        // function body
+
+        // call Main.main
+        writeCall("Main.main",0);
+
+        // enter infinite loop
+        String infiniteLoopLabel = "SYS_INIT_INFINITE_LOOP";
+        mOutputFile.println("(" + infiniteLoopLabel + ")");
+        mOutputFile.println("@" + infiniteLoopLabel);
+        mOutputFile.println("0;JMP");
+
+        mOutputFile.flush();
     }
 
     /**
@@ -885,7 +917,7 @@ public class CodeWriter {
      */
     public void writeCall(String functionName, int numArgs) {
 
-        // push return address to stack
+        // 1. push return address to stack
         String returnLabel = "RETURN_" + functionName + "_" + Integer.toString(mFunctionCallCount);
 
         // D=return address
@@ -901,7 +933,7 @@ public class CodeWriter {
         mOutputFile.println("@SP");
         mOutputFile.println("M=M+1");
 
-        // push LCL
+        // 2. push LCL
         mOutputFile.println("@LCL");
         mOutputFile.println("D=M");
 
@@ -914,7 +946,7 @@ public class CodeWriter {
         mOutputFile.println("@SP");
         mOutputFile.println("M=M+1");
 
-        // push ARG
+        // 3. push ARG
         mOutputFile.println("@ARG");
         mOutputFile.println("D=M");
 
@@ -927,7 +959,7 @@ public class CodeWriter {
         mOutputFile.println("@SP");
         mOutputFile.println("M=M+1");
 
-        // push THIS
+        // 4. push THIS
         mOutputFile.println("@THIS");
         mOutputFile.println("D=M");
 
@@ -940,7 +972,7 @@ public class CodeWriter {
         mOutputFile.println("@SP");
         mOutputFile.println("M=M+1");
 
-        // push THAT
+        // 5. push THAT
         mOutputFile.println("@THAT");
         mOutputFile.println("D=M");
 
@@ -952,6 +984,8 @@ public class CodeWriter {
         // SP=SP+1
         mOutputFile.println("@SP");
         mOutputFile.println("M=M+1");
+
+        // 6. ARG=SP-numArgs-5
 
         // D=numArgs+5
         mOutputFile.println("@" + Integer.toString(numArgs+5));
@@ -965,6 +999,8 @@ public class CodeWriter {
         mOutputFile.println("@ARG");
         mOutputFile.println("M=D");
 
+        // 7. LCL=SP
+
         // D=SP
         mOutputFile.println("@SP");
         mOutputFile.println("D=M");
@@ -973,11 +1009,11 @@ public class CodeWriter {
         mOutputFile.println("@LCL");
         mOutputFile.println("M=D");
 
-        // transfer control to function
+        // 8. transfer control to function
         mOutputFile.println("@" + functionName);
         mOutputFile.println("0;JMP");
 
-        // return label
+        // 9. return label
         mOutputFile.println("(" + returnLabel + ")");
 
         mFunctionCallCount = mFunctionCallCount + 1;
@@ -1100,6 +1136,9 @@ public class CodeWriter {
 
     /**
      * Writes assembly code that effects the label command
+     * The label must be defined in the same function. We enforce
+     * this condition by pre-pending the function name to the label.
+     *
      * @param label the input label string
      */
     public void writeLabel(String label) {
@@ -1108,6 +1147,48 @@ public class CodeWriter {
 
         mOutputFile.println("(" + labelQualifiedWithFunctionName + ")");
         mOutputFile.flush();
+
+    }
+
+    /**
+     * Writes assembly code that effects the goto command.
+     * We prepend the label with the function name since the label
+     * command generates such labels.
+     *
+     * @param label the label string.
+     */
+    public void writeGoto(String label) {
+
+        String labelQualifiedWithFunctionName = mCurrentFunctionName + "$" + label;
+
+        mOutputFile.println("@"+labelQualifiedWithFunctionName);
+        mOutputFile.println("0;JMP");
+
+        mOutputFile.flush();
+    }
+
+    /**
+     * Writes assembly code that effects the if-goto command.
+     * We prepend the label with the function name since the label
+     * command generates such labels.
+     *
+     * @param label the label string
+     */
+    public void writeIf(String label) {
+
+        String labelQualifiedWithFunctionName = mCurrentFunctionName + "$" + label;
+
+        // D=M[SP]
+        mOutputFile.println("@SP");
+        mOutputFile.println("A=M");
+        mOutputFile.println("D=M");
+
+        // if D != 0, jump to label
+        mOutputFile.println("@" + labelQualifiedWithFunctionName);
+        mOutputFile.println("D;JNE");
+
+        mOutputFile.flush();
+
     }
 
     /**

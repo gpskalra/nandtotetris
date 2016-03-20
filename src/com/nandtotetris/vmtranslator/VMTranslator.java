@@ -88,6 +88,7 @@ public class VMTranslator {
     public void translateFile(File inputFile, CodeWriter codeWriter) {
 
         codeWriter.setCurrentFile(inputFile);
+        codeWriter.emitComment("file: " + inputFile.getName());
 
         Parser parser = new Parser(inputFile);
 
@@ -119,7 +120,7 @@ public class VMTranslator {
 
                 case C_FUNCTION:
 
-                    codeWriter.setCurrentFunctionName(parser.arg1());
+                    codeWriter.setCurrentFunction(parser.arg1());
                     codeWriter.writeFunction(parser.arg1(),parser.arg2());
                     break;
 
@@ -135,10 +136,12 @@ public class VMTranslator {
 
                 case C_GOTO:
 
+                    codeWriter.writeGoto(parser.arg1());
                     break;
 
                 case C_IF:
 
+                    codeWriter.writeIf(parser.arg1());
                     break;
 
                 default:
@@ -166,6 +169,8 @@ public class VMTranslator {
         File outputFile = getOutputFile(input);
 
         CodeWriter codeWriter = new CodeWriter(outputFile);
+
+        codeWriter.writeInit();
 
         if (input.isDirectory()) {
 
