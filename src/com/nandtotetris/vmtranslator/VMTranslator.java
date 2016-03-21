@@ -170,7 +170,7 @@ public class VMTranslator {
 
         CodeWriter codeWriter = new CodeWriter(outputFile);
 
-        // codeWriter.writeInit();
+        codeWriter.writeInit();
 
         if (input.isDirectory()) {
 

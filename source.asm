@@ -1,5 +1,58 @@
+@256
+D=A
+@SP
+M=D
+@RETURN_Sys.init_0
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@LCL
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@ARG
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@THIS
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@5
+D=A
+@SP
+D=M-D
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Sys.init
+0;JMP
+(RETURN_Sys.init_0)
 // file: source.vm
-// push constant 0
+// function SimpleFunction.test 2
+(SimpleFunction.test)
 @0
 D=A
 @SP
@@ -7,25 +60,15 @@ A=M
 M=D
 @SP
 M=M+1
-// pop local 0
-@LCL
-D=M
 @0
-D=D+A
-@R13
-M=D
-@SP
-M=M-1
+D=A
 @SP
 A=M
-D=M
-@R13
-A=M
 M=D
-// label LOOP_START
-(null$LOOP_START)
-// push argument 0
-@ARG
+@SP
+M=M+1
+// push local 0
+@LCL
 D=M
 @0
 A=D+A
@@ -35,8 +78,37 @@ A=M
 M=D
 @SP
 M=M+1
-// push local 0
+// push local 1
 @LCL
+D=M
+@1
+A=D+A
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// add
+@SP
+M=M-1
+A=M
+D=M
+@SP
+M=M-1
+A=M
+M=D+M
+@SP
+M=M+1
+// not
+@SP
+M=M-1
+A=M
+M=!M
+@SP
+M=M+1
+// push argument 0
+@ARG
 D=M
 @0
 A=D+A
@@ -57,35 +129,12 @@ A=M
 M=D+M
 @SP
 M=M+1
-// pop local 0
-@LCL
-D=M
-@0
-D=D+A
-@R13
-M=D
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@R13
-A=M
-M=D
-// push argument 0
+// push argument 1
 @ARG
 D=M
-@0
+@1
 A=D+A
 D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
-// push constant 1
-@1
-D=A
 @SP
 A=M
 M=D
@@ -102,48 +151,54 @@ A=M
 M=M-D
 @SP
 M=M+1
-// pop argument 0
-@ARG
-D=M
-@0
-D=D+A
-@R13
-M=D
+// return
 @SP
 M=M-1
 @SP
 A=M
 D=M
-@R13
-A=M
-M=D
-// push argument 0
 @ARG
-D=M
-@0
-A=D+A
-D=M
-@SP
 A=M
 M=D
+@ARG
+D=M+1
 @SP
-M=M+1
-// if-goto LOOP_START
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@null$LOOP_START
-D;JNE
-// push local 0
+M=D
+@5
+D=A
 @LCL
+A=M-D
 D=M
-@0
-A=D+A
-D=M
-@SP
-A=M
+@R13
 M=D
-@SP
-M=M+1
+@LCL
+M=M-1
+@LCL
+A=M
+D=M
+@THAT
+M=D
+@LCL
+M=M-1
+@LCL
+A=M
+D=M
+@THIS
+M=D
+@LCL
+M=M-1
+@LCL
+A=M
+D=M
+@ARG
+M=D
+@LCL
+M=M-1
+@LCL
+A=M
+D=M
+@LCL
+M=D
+@R13
+A=M
+0;JMP

@@ -151,24 +151,25 @@ public class CodeWriter {
 
         mOutputFile.flush();
 
-        // call Sys.init
+        // call Sys.init (defined in the file Sys.vm)
         writeCall("Sys.init",0);
 
         // write Sys.init function
-        writeFunction("Sys.init",0);
+        // writeFunction("Sys.init",0);
 
         // Sys.init function body
 
         // call Main.main
-        writeCall("Main.main",0);
+        // writeCall("Main.main",0);
 
         // enter infinite loop
+        /*
         String infiniteLoopLabel = "SYS_INIT_INFINITE_LOOP";
         mOutputFile.println("(" + infiniteLoopLabel + ")");
         mOutputFile.println("@" + infiniteLoopLabel);
         mOutputFile.println("0;JMP");
-
         mOutputFile.flush();
+        */
     }
 
     /**
@@ -1073,7 +1074,7 @@ public class CodeWriter {
         mOutputFile.println("@5");
         mOutputFile.println("D=A");
         mOutputFile.println("@LCL");
-        mOutputFile.println("A=A-D");
+        mOutputFile.println("A=M-D");
         mOutputFile.println("D=M");
         mOutputFile.println("@R13");
         mOutputFile.println("M=D");
