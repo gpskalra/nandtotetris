@@ -142,8 +142,8 @@ public class Parser {
         try {
 
             String line = mInputFile.readLine();
-            String tailCommentRegex = "(\\s*)(//.*)";
-            mCurrentCommand = line.replaceAll(tailCommentRegex,"");
+            String tailWhiteSpaceOrCommentRegex = "((\\s*)(//.*)?)$";
+            mCurrentCommand = line.replaceAll(tailWhiteSpaceOrCommentRegex,"");
 
         } catch (IOException e) {
 
@@ -176,10 +176,10 @@ public class Parser {
 
         if (mCurrentCommand.contains("label"))
             return CommandTypeVM.C_LABEL;
-        if (mCurrentCommand.contains("goto"))
-            return CommandTypeVM.C_GOTO;
         if (mCurrentCommand.contains("if"))
             return CommandTypeVM.C_IF;
+        if (mCurrentCommand.contains("goto"))
+            return CommandTypeVM.C_GOTO;
 
         if (mCurrentCommand.contains("function"))
             return CommandTypeVM.C_FUNCTION;

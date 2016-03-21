@@ -149,13 +149,15 @@ public class CodeWriter {
         mOutputFile.println("@SP");
         mOutputFile.println("M=D");
 
+        mOutputFile.flush();
+
         // call Sys.init
         writeCall("Sys.init",0);
 
         // write Sys.init function
         writeFunction("Sys.init",0);
 
-        // function body
+        // Sys.init function body
 
         // call Main.main
         writeCall("Main.main",0);
@@ -1177,6 +1179,10 @@ public class CodeWriter {
     public void writeIf(String label) {
 
         String labelQualifiedWithFunctionName = mCurrentFunctionName + "$" + label;
+
+        // SP=SP-1
+        mOutputFile.println("@SP");
+        mOutputFile.println("M=M-1");
 
         // D=M[SP]
         mOutputFile.println("@SP");
