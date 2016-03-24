@@ -152,38 +152,8 @@ public class CodeWriter {
         mOutputFile.flush();
 
         // call Sys.init (defined in the file Sys.vm)
-        // writeCall("Sys.init",0);
+        writeCall("Sys.init",0);
 
-        // Since Sys.init never returns, do not need to
-        // do not need to follow the complete protocol for
-        // calling Sys.init
-
-        // LCL=SP
-        mOutputFile.println("@SP");
-        mOutputFile.println("D=M");
-        mOutputFile.println("@LCL");
-        mOutputFile.println("M=D");
-
-        // jump to Sys.init
-        mOutputFile.println("@Sys.init");
-        mOutputFile.println("0;JMP");
-
-        // write Sys.init function
-        // writeFunction("Sys.init",0);
-
-        // Sys.init function body
-
-        // call Main.main
-        // writeCall("Main.main",0);
-
-        // enter infinite loop
-        /*
-        String infiniteLoopLabel = "SYS_INIT_INFINITE_LOOP";
-        mOutputFile.println("(" + infiniteLoopLabel + ")");
-        mOutputFile.println("@" + infiniteLoopLabel);
-        mOutputFile.println("0;JMP");
-        mOutputFile.flush();
-        */
     }
 
     /**
