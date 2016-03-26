@@ -153,26 +153,34 @@ public class CodeWriter {
         // to known illegal values
 
         // LCL=-1
-        mOutputFile.println("@-1");
+        mOutputFile.println("@0");
         mOutputFile.println("D=A");
+        mOutputFile.println("@1");
+        mOutputFile.println("D=D-A");
         mOutputFile.println("@LCL");
         mOutputFile.println("M=D");
 
         // ARG=-2
-        mOutputFile.println("@-2");
+        mOutputFile.println("@0");
         mOutputFile.println("D=A");
+        mOutputFile.println("@2");
+        mOutputFile.println("D=D-A");
         mOutputFile.println("@ARG");
         mOutputFile.println("M=D");
 
         // THIS=-3
-        mOutputFile.println("@-3");
+        mOutputFile.println("@0");
         mOutputFile.println("D=A");
+        mOutputFile.println("@3");
+        mOutputFile.println("D=D-A");
         mOutputFile.println("@THIS");
         mOutputFile.println("M=D");
 
         // THAT=-4
-        mOutputFile.println("@-4");
+        mOutputFile.println("@0");
         mOutputFile.println("D=A");
+        mOutputFile.println("@4");
+        mOutputFile.println("D=D-A");
         mOutputFile.println("@THAT");
         mOutputFile.println("M=D");
 
