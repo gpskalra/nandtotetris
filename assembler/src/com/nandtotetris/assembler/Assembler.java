@@ -1,8 +1,6 @@
 package com.nandtotetris.assembler;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 
 public class Assembler {
 
@@ -78,21 +76,39 @@ public class Assembler {
     /**
      * Runs through the input file.
      * For each instruction, writes the corresponding binary code to the
-     * .hack file
+     * .hack file.
+     *
+     * Also writes a listing file for easy debugging.
+     * The format of the listing file is as follows:
+     *
+     * For C Command:
+     * <Instruction number> C <Hex Instruction> <Assembly instruction>
+     *
+     * For A Command:
+     * <Instruction number> A <Decimal value> <Assembly Instruction>
+     *
+     * For L Command:
+     * <Assembly Instruction>
+     *
      */
     private void secondPass(String inputFileName) {
 
         PrintWriter outputFile = null;
+        PrintWriter listingFile = null;
 
-        String outputFileName = inputFileName.replaceAll(".asm",".hack");
+        String outputFileName  = inputFileName.replaceAll(".asm",".hack");
+        String listingFileName = inputFileName.replaceAll(".asm",".listing");
 
         try {
             outputFile = new PrintWriter(new FileWriter(outputFileName));
+            listingFile = new PrintWriter(new FileWriter(listingFileName));
 
             // opens the input file for parsing
             Parser parser = new Parser(inputFileName);
 
             Integer variableAddress = 16;
+
+            int instructionNumber = 0;
 
             while(parser.hasMoreCommands()) {
 
@@ -127,6 +143,10 @@ public class Assembler {
 
                         // Write instruction to file
                         outputFile.println(instruction);
+                        listingFile.println(Integer.toString(instructionNumber) + "\t" + "A" + "\t"
+                                + address + "\t" + parser.getCurrentCommand());
+
+                        instructionNumber = instructionNumber + 1;
 
                         break;
 
@@ -136,10 +156,18 @@ public class Assembler {
 
                         // Write instruction to file
                         outputFile.println(instruction);
+                        listingFile.println(Integer.toString(instructionNumber) + "\t" + "C" + "\t"
+                                + Integer.toHexString(Integer.parseInt(instruction,2)) + "\t" + parser.getCurrentCommand());
+
+                        instructionNumber = instructionNumber + 1;
 
                         break;
 
                     case L_COMMAND:
+
+                        listingFile.println(parser.getCurrentCommand());
+                        break;
+
                     default:
 
                         break;
@@ -149,6 +177,7 @@ public class Assembler {
             System.err.println("Caught IOException: " +  e.getMessage());
         } finally {
             outputFile.close();
+            listingFile.close();
         }
     }
 

@@ -24,6 +24,16 @@ public class Parser {
     }
 
     /**
+     * Returns the current command. Should be called only when
+     * advance method has set current command.
+     *
+     * @return the current command string
+     */
+    String getCurrentCommand() {
+        return currentCommand;
+    }
+
+    /**
      * Checks if an input line contains a command
      *
      * @param line input line of assembly language input file
