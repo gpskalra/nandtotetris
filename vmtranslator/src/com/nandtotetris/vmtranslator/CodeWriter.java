@@ -301,7 +301,7 @@ public class CodeWriter {
 
                 // otherwise, M[SP] = 0x0 (false)
                 mOutputFile.println("@PUSH_FALSE_" + Integer.toString(mComparisonCommandCount));
-                mOutputFile.println("0,JMP");
+                mOutputFile.println("0;JMP");
 
 
                 // label (PUSH_TRUE_ + <LOGICAL_COMMAND_COUNT>)
@@ -1067,6 +1067,15 @@ public class CodeWriter {
      */
     public void writeReturn() {
 
+        // R13=M[LCL-5] (return address)
+        mOutputFile.println("@5");
+        mOutputFile.println("D=A");
+        mOutputFile.println("@LCL");
+        mOutputFile.println("A=M-D");
+        mOutputFile.println("D=M");
+        mOutputFile.println("@R13");
+        mOutputFile.println("M=D");
+
         // push return value to stack
 
         // SP=SP-1
@@ -1087,15 +1096,6 @@ public class CodeWriter {
         mOutputFile.println("@ARG");
         mOutputFile.println("D=M+1");
         mOutputFile.println("@SP");
-        mOutputFile.println("M=D");
-
-        // R13=M[LCL-5] (return address)
-        mOutputFile.println("@5");
-        mOutputFile.println("D=A");
-        mOutputFile.println("@LCL");
-        mOutputFile.println("A=M-D");
-        mOutputFile.println("D=M");
-        mOutputFile.println("@R13");
         mOutputFile.println("M=D");
 
         // restore THAT,THIS,ARG,LCL
