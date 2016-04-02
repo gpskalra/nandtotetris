@@ -1,0 +1,56 @@
+/**
+ * Implements the Sokoban game.
+ *
+ * The aim of the game is to push a set of boxes to a set of
+ * fixed destination locations in a 2D grid arena.
+ *
+ * A player can only move one step in one of the four
+ * directions using the arrow keys at a time.
+ *
+ * The player is represented using a small circle.
+ * The destination positions are represented as big circles.
+ * The blocks to be pushed are represented as squares.
+
+ * The player can quit the game at any time using the q key.
+ */
+class SokobanGame {
+
+    // The player
+    field SokobanPlayer player;
+    
+    // The number of blocks to push
+    field int numBlocks;
+
+    // The destinations
+    field Array goals;
+
+    // The blocks to push
+    field Array blocks;
+
+    // The arena of the game
+    field Arena arena;
+    
+    // The game is in running state if this is not zero.
+    //                over    state if this is zero.
+    field int numBlocksUnplaced;
+
+    /** Creates a new SokobanGame object with a given
+    Arena. */
+    constructor SokobanGame new(Arena inputArena) {
+        let arena = inputArena;
+        do arena.draw();
+        return this;
+    }
+
+    /** Deallocate object's memory. */
+    method void dispose() {
+        do arena.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Runs the Sokoban Game. */
+    method void run() {
+        return;
+    }
+}

@@ -1,0 +1,67 @@
+/**
+ * Implements the arena for Sokoban Game.
+ *
+ * The screen is divided into PxP pixel squares.
+ * Grid location (i,j) represents the square with
+ * top left coordinates (P*i,P*j) on the screen,
+ * where 0 <= i < 256/P and 0 <= j < 512/P.
+ *
+ * The arena is described by an indicator matrix
+ * I, where:
+ *
+ * I(i,j) = 1 if grid location (i,j) is part of arena
+ *          0 otherwise.
+ */
+class Arena {
+
+    // The size of one grid unit. Also called P
+    // elsewhere.
+    field int gridSize;
+
+    // The indicator matrix is a (256/P)x(512/P) 2D Array.
+    field Array indicatorMatrix;
+
+    /** Constructs a new arena from an indicator matrix
+    and a grid size. */
+    constructor Arena new(Array matrix,int size) {
+        let indicatorMatrix = matrix;
+        let gridSize = size;
+        return this;
+    }
+
+    /** Deallocate object's memory. */
+    method void dispose() {
+       do Memory.deAlloc(this);
+       return;
+    }
+
+    /** Checks if the arena contains a grid location. */
+    method boolean contains(int x,int y) {
+        var Array row;
+        let row = indicatorMatrix[x];
+        return row[y];
+    }
+
+    /** Draws a boundary for the arena on the screen. */
+    method void draw() {
+        var int x,y;
+        var Array row;
+        
+        do Screen.setColor(true);
+
+        let x = 0;
+        while (x < (256/gridSize)) {
+            let y = 0;
+            while (y < 512/gridSize) {
+                let row = indicatorMatrix[x]; 
+                if (row[y] = false) {
+                    do Screen.drawRectangle(gridSize*x,gridSize*y,
+                    (gridSize*x)+(gridSize-1),(gridSize*y)+(gridSize-1));                   
+                }
+                let y = y + 1;
+            }
+            let x = x + 1;
+        }
+        return;
+    }
+}
