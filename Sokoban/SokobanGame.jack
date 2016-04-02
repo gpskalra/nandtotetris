@@ -8,43 +8,52 @@
  * directions using the arrow keys at a time.
  *
  * The player is represented using a small circle.
- * The destination positions are represented as big circles.
+ * The goal positions are represented as big circles.
  * The blocks to be pushed are represented as squares.
-
  * The player can quit the game at any time using the q key.
  */
 class SokobanGame {
 
     // The player
-    field SokobanPlayer player;
+    field Player player;
     
-    // The number of blocks to push
-    field int numBlocks;
-
     // The destinations
     field Array goals;
 
     // The blocks to push
     field Array blocks;
 
-    // The arena of the game
-    field Arena arena;
+    // The number of blocks to push
+    field int numBlocks;
     
     // The game is in running state if this is not zero.
     //                over    state if this is zero.
     field int numBlocksUnplaced;
 
-    /** Creates a new SokobanGame object with a given
-    Arena. */
-    constructor SokobanGame new(Arena inputArena) {
-        let arena = inputArena;
-        do arena.draw();
+    /** Creates a new SokobanGame object. */
+    constructor SokobanGame new() {
+
+        let player = Player.new(0,0);
+        let numBlocks = 2;
+        let numBlocksUnplaced = 0;
+
+        let blocks = Array.new(numBlocks);
+        let goals = Array.new(numBlocks);
+
+        let blocks[0] = Block.new(2,2);
+        let blocks[1] = Block.new(1,1);
+
+        let goals[0] = Goal.new(3,3);
+        let goals[1] = Goal.new(4,4);
+        
         return this;
     }
 
     /** Deallocate object's memory. */
     method void dispose() {
-        do arena.dispose();
+        do player.dispose();
+        do goals.dispose();
+        do blocks.dispose();
         do Memory.deAlloc(this);
         return;
     }

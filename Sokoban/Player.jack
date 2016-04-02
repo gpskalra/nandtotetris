@@ -1,9 +1,10 @@
 /**
- * Implements a goal for the Sokoban game.
+ * Implements a player for the Sokoban Game.
  *
- * A goal is represented by a circle with diameter 32 pixels.
+ * A player is represented by a small circle with diameter
+ * 16 pixels on the screen.
  */
-class Goal {
+class Player {
 
     // The grid location
     // 0 <= x < 16
@@ -12,10 +13,10 @@ class Goal {
     field int gridY;
     
     /**
-     * Constructs a new goal with the given (x,y) grid
+     * Constructs a new player with the given (x,y) grid
      * coordinates.
      */
-    constructor Goal new(int x,int y) {
+    constructor Player new(int x,int y) {
        let gridX = x;
        let gridY = y;
        do draw();
@@ -32,8 +33,7 @@ class Goal {
     method void draw() {
         do Screen.setColor(true);
         do Screen.drawCircle((32*gridX) + 16,(32*gridY) + 16
-        ,15);
+        ,8);
         return;
-    } 
-  
+    }
 }

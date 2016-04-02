@@ -1,38 +1,13 @@
 /**
- * The main class initialises a new Sokoban game and starts it
+ * The main class initializes a new Sokoban game and starts it
  */
 class Main {
 
     /** Initializes a new game and starts it. */
     function void main() {
 
-        // var Array arenaMatrix;
-        // var Array arenaMatrixRow;
-        // var Arena arena;
         var SokobanGame game;
-        // var int gridSize;
-        var int i,j;
 
-        // let gridSize = 64;
-        // let arenaMatrix = Array.new(256/gridSize); 
-
-        let i = 0;
-        let j = 0;
-
-        /*
-        while (i < (256/gridSize)) {
-            let j = 0;
-            let arenaMatrixRow = Array.new(512/gridSize);
-            while (j < (512/gridSize)) {
-                let arenaMatrixRow[j] = (i > 2);
-                let j = j + 1;
-            }
-            let arenaMatrix[i] = arenaMatrixRow;
-            let i = i + 1;
-        }
-        */
-        
-        // let arena = Arena.new(arenaMatrix,gridSize);
         let game = SokobanGame.new();
 
         do game.run();
