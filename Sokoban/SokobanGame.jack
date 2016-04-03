@@ -14,6 +14,9 @@
  */
 class SokobanGame {
 
+    // The arena for the game, complete screen in Hack case
+    field Arena arena;
+    
     // The player
     field Player player;
     
@@ -30,27 +33,31 @@ class SokobanGame {
     //                over    state if this is zero.
     field int numBlocksUnplaced;
 
+    // These two fields describe the current direction
+    // Can have values -1,0,+1
+    field int directionX;
+    field int directionY;
+
     /** Creates a new SokobanGame object. */
     constructor SokobanGame new() {
 
+        let arena = Arena.new();
         let player = Player.new(0,0);
         let numBlocks = 2;
-        let numBlocksUnplaced = 0;
-
+        let numBlocksUnplaced = 2;
         let blocks = Array.new(numBlocks);
         let goals = Array.new(numBlocks);
-
         let blocks[0] = Block.new(2,2);
-        let blocks[1] = Block.new(1,1);
-
-        let goals[0] = Goal.new(3,3);
-        let goals[1] = Goal.new(4,4);
-        
+        let blocks[1] = Block.new(5,8);
+        let goals[0] = Goal.new(1,3);
+        let goals[1] = Goal.new(7,4);
+ 
         return this;
     }
 
     /** Deallocate object's memory. */
     method void dispose() {
+        do arena.dispose();
         do player.dispose();
         do goals.dispose();
         do blocks.dispose();
@@ -58,8 +65,183 @@ class SokobanGame {
         return;
     }
 
+    /**
+     * Returns blockNum if blocks[blockNum] is placed at (x,y)
+     *         -1       otherwise
+     */
+    method int blockAt(int x,int y) {
+
+        var Block block;
+        let block = blocks[0];
+        
+        if ((block.getX() = x) & (block.getY() = y)) {
+            return 0;
+        }
+
+        let block = blocks[1];
+
+        if ((block.getX() = x) & (block.getY() = y)) {
+            return 1;
+        }
+        
+        return -1;
+    }
+
+    /**
+     * Returns goalNum if goals[goalNum] is placed at (x,y)
+     *         -1       otherwise
+     */
+    method int goalAt(int x,int y) {
+
+        var Goal goal;
+
+        let goal = goals[0];
+        if ((goal.getX() = x) & (goal.getY() = y)) {
+            return 0;
+        }
+        
+        let goal = goals[1];
+        if ((goal.getX() = x) & (goal.getY() = y)) {
+            return 1;
+        }
+        
+        return -1;
+    }
+
+    /**
+     * Tries to move a block in a given direction.
+     * If there is a "goal" at the destination location,
+     * "numBlocksUnplaced" is updated.
+     */
+    method void moveBlock(int blockNumber,int dirX,int dirY) {
+
+        var int x;
+        var int y;
+        var int oneStepX;
+        var int oneStepY;
+
+        // the block object to move
+        var Block block;
+
+        let block = blocks[blockNumber];
+        let x = block.getX();
+        let y = block.getY();
+        let oneStepX = x + dirX;
+        let oneStepY = y + dirY;
+
+        if (arena.contains(oneStepX,oneStepY)) {
+
+            do block.move(dirX,dirY);
+
+            // there is a goal at the destination
+            if (~(goalAt(oneStepX,oneStepY) = (-1))) {
+                let numBlocksUnplaced = numBlocksUnplaced - 1;
+            }
+        }
+
+        return;    
+    }
+
+    /** Makes a Sokoban game player move. */
+    method void movePlayer(int dirX,int dirY) {
+
+        // the x,y coordinates of the player
+        var int x;
+        var int y;
+        
+        // the x,y coordinates of the player's
+        // intended destination
+        var int oneStepX;
+        var int oneStepY;
+
+        // the id of the block at one step, -1 if no block
+        var int blockAtOneStep;
+
+        if((dirX = 0) & (dirY = 0)) {
+            return;
+        }
+
+        let x = player.getX();
+        let y = player.getY();
+        let oneStepX = x + dirX;
+        let oneStepY = y + dirY;
+        
+        if (arena.contains(oneStepX,oneStepY)) {
+
+            let blockAtOneStep = blockAt(oneStepX,oneStepY);
+
+            if (blockAtOneStep = (-1)) {
+                do player.move(dirX,dirY);
+            }
+            else {
+                do moveBlock(blockAtOneStep,dirX,dirY);
+
+                // if moveBlock fails to move the block, the
+                // block would still be there.
+                let blockAtOneStep = blockAt(oneStepX,
+                                             oneStepY);
+
+                // the block has been moved
+                if (blockAtOneStep = (-1)) {
+                    do player.move(dirX,dirY);
+                }
+            }
+        }
+        
+        return;
+    }
+
     /** Runs the Sokoban Game. */
     method void run() {
+
+        var int directionX;
+        var int directionY;
+        var char key;
+        var boolean exit;
+
+        let directionX = 0;
+        let directionY = 0;
+        let exit = false;
+
+        while ((~exit) & (numBlocksUnplaced > 0)) {
+
+            let key = Keyboard.keyPressed();
+
+            while (((key > 133) | (key < 130)) &
+                   (~(key = 113))) {
+                let key = Keyboard.keyPressed(); 
+            }
+
+            if (key = 113) {
+                let exit = true;
+            }
+
+            // left
+            if (key = 130) {
+                let directionY = -1;
+            }
+
+            // up
+            if (key = 131) {
+                let directionX = -1;                
+            }
+
+            // right
+            if (key = 132) {
+                let directionY = 1;               
+            }
+
+            // down
+            if (key = 133) {
+                let directionX = 1;
+            }
+
+            do game.movePlayer(directionX,directionY);
+            
+            let directionX = 0;
+            let directionY = 0;
+        }
+
         return;
     }
 }

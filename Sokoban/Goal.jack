@@ -8,16 +8,16 @@ class Goal {
     // The grid location
     // 0 <= x < 16
     // 0 <= y < 8
-    field int gridX;
-    field int gridY;
+    field int x;
+    field int y;
     
     /**
      * Constructs a new goal with the given (x,y) grid
      * coordinates.
      */
-    constructor Goal new(int x,int y) {
-       let gridX = x;
-       let gridY = y;
+    constructor Goal new(int gridX,int gridY) {
+       let x = gridX;
+       let y = gridY;
        do draw();
        return this;
     }
@@ -28,10 +28,20 @@ class Goal {
         return;
     }
 
+    /** Getter for x coordinate. */
+    method int getX() {
+        return x;
+    }
+
+    /** Getter for y coordinate. */
+    method int getY() {
+        return y;
+    }
+
     /** Draws the goal on the screen */
     method void draw() {
         do Screen.setColor(true);
-        do Screen.drawCircle((32*gridX) + 16,(32*gridY) + 16
+        do Screen.drawCircle((32*x) + 16,(32*y) + 16
         ,15);
         return;
     } 
