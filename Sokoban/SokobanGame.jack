@@ -33,24 +33,19 @@ class SokobanGame {
     //                over    state if this is zero.
     field int numBlocksUnplaced;
 
-    // These two fields describe the current direction
-    // Can have values -1,0,+1
-    field int directionX;
-    field int directionY;
-
     /** Creates a new SokobanGame object. */
     constructor SokobanGame new() {
 
         let arena = Arena.new();
-        let player = Player.new(0,0);
+        let player = Player.new(1,2);
         let numBlocks = 2;
         let numBlocksUnplaced = 2;
         let blocks = Array.new(numBlocks);
         let goals = Array.new(numBlocks);
-        let blocks[0] = Block.new(2,2);
-        let blocks[1] = Block.new(5,8);
-        let goals[0] = Goal.new(1,3);
-        let goals[1] = Goal.new(7,4);
+        let blocks[0] = Block.new(1,3);
+        let blocks[1] = Block.new(2,4);
+        let goals[0] = Goal.new(1,4);
+        let goals[1] = Goal.new(2,5);
  
         return this;
     }
@@ -218,25 +213,25 @@ class SokobanGame {
 
             // left
             if (key = 130) {
-                let directionY = -1;
+                let directionX = -1;
             }
 
             // up
             if (key = 131) {
-                let directionX = -1;                
+                let directionY = -1;                
             }
 
             // right
             if (key = 132) {
-                let directionY = 1;               
+                let directionX = 1;               
             }
 
             // down
             if (key = 133) {
-                let directionX = 1;
+                let directionY = 1;
             }
 
-            do game.movePlayer(directionX,directionY);
+            do movePlayer(directionX,directionY);
             
             let directionX = 0;
             let directionY = 0;

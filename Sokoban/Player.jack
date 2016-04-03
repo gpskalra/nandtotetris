@@ -50,8 +50,7 @@ class Player {
     /** Erases the player from the screen. */
     method void erase() {
         do Screen.setColor(false);
-        do Screen.drawRectangle(32*x,32*y,(32*x) + 31,
-                                (32*y) + 31);
+        do Screen.drawCircle((32*x) + 16,(32*y) + 16,8);
         return;
     }
 
