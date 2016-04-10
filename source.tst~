@@ -1,5 +1,0 @@
-load source.asm,
-
-repeat 80 {
-    ticktock;
-}
