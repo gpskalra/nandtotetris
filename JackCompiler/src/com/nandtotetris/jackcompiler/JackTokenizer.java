@@ -169,26 +169,58 @@ public class JackTokenizer {
     }
 
     /**
-     * Returns the token type of the current token.
+     * Returns true if an input character is a
+     * number.
      *
-     * @return TokenType of token stored in currentToken
+     * @param inputChar the input character
+     * @return true if 0 <= inputChar <= 9
+     *         false otherwise
      */
-    public TokenType tokenType() {
-
-
-        return null;
+    private Boolean isANumber(char inputChar) {
+        return '0' <= inputChar && inputChar <= '9';
     }
 
     /**
-     * Returns true if input char is a whitespace
+     * Returns true if an input character is a
+     * letter of the English alphabet
      * @param inputChar the input character
-     * @return true if inputChar is a whitespace
+     * @return true if inputChar is a letter
      *         false otherwise
      */
-    private Boolean isWhiteSpace(char inputChar) {
-        return inputChar == ' ' || inputChar == '\t' || inputChar == '\n' || inputChar == '\r';
-    }
+    private Boolean isALetter(char inputChar) {
+        return ('a' <= inputChar && inputChar <= 'z') || ('A' <= inputChar && inputChar <= 'Z');
+     }
 
+    /**
+     * Returns the token type of the current token.
+     *
+     * @return TokenType of token string currentToken
+     *         currentToken must be ensured to be
+     *         non empty.
+     */
+    public TokenType tokenType() {
+
+        char firstChar = currentToken.charAt(0);
+
+        if (isANumber(firstChar)) {
+            return TokenType.TOKEN_INT_CONST;
+        }
+        if (isALetter(firstChar)) {
+            if (Keyword.get(currentToken) != null) {
+                return TokenType.TOKEN_KEYWORD;
+            }
+            return TokenType.TOKEN_IDENTIFIER;
+        }
+        if (firstChar == '"') {
+            return TokenType.TOKEN_STRING_CONST;
+        }
+        if (firstChar == '_') {
+            return TokenType.TOKEN_IDENTIFIER;
+        }
+
+        return TokenType.TOKEN_SYMBOL;
+    }
+    
     /**
      * Returns true if an input character can be a
      * part of an identifer as specified by the jack
@@ -198,7 +230,7 @@ public class JackTokenizer {
      * @return true if inputChar can be part of an identifier
      *         false otherwise
      */
-    private Boolean isIdentiferChar(int inputChar) {
+    private Boolean isIdentifierChar(int inputChar) {
         return ('a' <= inputChar && inputChar <= 'z') ||
                 ('A' <= inputChar && inputChar <= 'Z') ||
                 ('0' <= inputChar && inputChar <= '9') ||
@@ -220,7 +252,7 @@ public class JackTokenizer {
             while (true) {
                 inputReader.mark(1);
                 int currentChar = inputReader.read();
-                if (!isIdentiferChar(currentChar)) {
+                if (!isIdentifierChar(currentChar)) {
                     inputReader.reset();
                     return identifier;
                 }
@@ -308,7 +340,7 @@ public class JackTokenizer {
             inputReader.mark(1);
             int currentChar = inputReader.read();
 
-            // identifer or keyword
+            // identifier or keyword
             if (currentChar == '_' || ('a' <= currentChar && currentChar <= 'z')
                     || ('A' <= currentChar && currentChar <= 'Z')) {
                 inputReader.reset();
@@ -327,7 +359,7 @@ public class JackTokenizer {
                     else { // symbol
                         currentToken = "" + (char) currentChar;
                     }
-                }
+                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -341,6 +373,62 @@ public class JackTokenizer {
      */
     public String getCurrentToken() {
         return currentToken;
+    }
+
+    /**
+     * Returns the keyword corresponding to the currentToken.
+     * Should be called only when the currentToken's TokenType
+     * is keyword.
+     * @return Keyword enum corresponding to the currentToken.
+     */
+    public Keyword keyword() {
+        return Keyword.get(currentToken);
+    }
+
+    /**
+     * returns the character which is the current token.
+     * Should be called only when tokenType() is symbol.
+     * @return the character which is currentToken
+     */
+    public char symbol() {
+        return currentToken.charAt(0);
+    }
+
+    /**
+     * returns the identifier which is the current token.
+     * Should be called only when tokenType() is identifier.
+     * @return the identifier which is currentToken
+     */
+    public String identifier() {
+        return currentToken;
+    }
+    /**
+     * returns the int const which is the current token.
+     * Should be called only when tokenType() is int const.
+     * @return the int const which is currentToken
+     */
+    public int intVal() {
+
+        int intVal = 0;
+
+        try {
+            intVal = Integer.parseInt(currentToken);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+
+        return intVal;
+    }
+
+    /**
+     * Returns the string constant without the quotes,
+     * which is the current token.
+     *
+     * @return string_const if currentToken is "string_const"
+     */
+    public String stringVal() {
+        String stringVal = currentToken.replaceAll("([\"])(.*)([\"])","$2");
+        return stringVal;
     }
 
 }
