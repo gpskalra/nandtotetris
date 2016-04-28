@@ -4,8 +4,8 @@ import java.util.HashMap;
 
 /**
  * The keywords specified by the Jack grammar.
- * Provides method to look up a keyword from the
- * keyword string.
+ * Provides method to look up a keywordString from the
+ * keywordString string.
  */
 public enum Keyword {
 
@@ -32,24 +32,27 @@ public enum Keyword {
     WHILE("while"),
     RETURN("return");
 
-    private String keyword;
+    private final String keywordString;
 
     private static final HashMap<String,Keyword> lookUp = new HashMap<>();
 
     static {
         for (Keyword k : Keyword.values()) {
-            lookUp.put(k.keyword,k);
+            lookUp.put(k.keywordString,k);
         }
     }
 
     Keyword(String keyword) {
-        this.keyword = keyword;
+        this.keywordString = keyword;
     }
 
-    // returns the enum corresponding to the keyword string.
-    // returns null if the input string is not a keyword
+    // returns the enum corresponding to the keywordString string.
+    // returns null if the input string is not a keywordString
     public static Keyword get(String k) {
         return lookUp.get(k);
     }
 
+    public String getKeywordString() {
+        return keywordString;
+    }
 }

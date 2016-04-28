@@ -77,6 +77,9 @@ public class JackTokenizer {
                                 state = 2;
                                 break;
                             default:
+                                /*if (currentChar == '\"') {
+                                    // System.out.println("Info: hasMoreTokens: First character is a quote");
+                                }*/
                                 inputReader.reset();
                                 return true;
                         }
@@ -220,7 +223,7 @@ public class JackTokenizer {
 
         return TokenType.TOKEN_SYMBOL;
     }
-    
+
     /**
      * Returns true if an input character can be a
      * part of an identifer as specified by the jack
@@ -306,15 +309,18 @@ public class JackTokenizer {
         String stringConst = "";
 
         try {
-            // append a '"'
+            // The first character should be a quote
             int currentChar = inputReader.read();
-            stringConst = stringConst + currentChar;
+            if (currentChar != '\"') {
+                System.out.println("Error: JackTokenizer getStringConst The first character should be a quote");
+                System.exit(1);
+            }
+            stringConst = stringConst + (char) currentChar;
 
             while (true) {
-
                 currentChar = inputReader.read();
-                stringConst = stringConst + currentChar;
-                if (currentChar == '"') {
+                stringConst = stringConst + (char) currentChar;
+                if (currentChar == '\"') {
                     break;
                 }
             }
@@ -352,7 +358,7 @@ public class JackTokenizer {
                     currentToken = getInt();
                 }
                 else { // string constant
-                    if (currentChar == '"') {
+                    if (currentChar == '\"') {
                         inputReader.reset();
                         currentToken = getStringConst();
                     }
@@ -408,6 +414,11 @@ public class JackTokenizer {
      * @return the int const which is currentToken
      */
     public int intVal() {
+
+        if (tokenType() != TokenType.TOKEN_INT_CONST) {
+            System.out.println("Error: JackTokenizer intVal called when tokenType() is not INT_CONST");
+            System.exit(1);
+        }
 
         int intVal = 0;
 
