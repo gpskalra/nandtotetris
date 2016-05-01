@@ -177,7 +177,6 @@ public class JackAnalyser {
     private static void tokenize(File input) {
 
         if (input.isDirectory()) {
-
             // list of files to process
             File[] listOfInputFiles = input.listFiles();
 
@@ -186,20 +185,49 @@ public class JackAnalyser {
                     tokenizeFile(file);
                 }
             }
-
         }
 
         else {
-
             tokenizeFile(input);
+        }
 
+    }
+
+    /**
+     * Driver for syntax analysis.
+     *
+     * For each input jack file, opens an
+     * output xml file and then invokes the
+     * compilation engine to write xml output
+     * according to the jack analyser specification.
+     *
+     * @param input The input File object. Input can
+     *              be a jack file or a directory with
+     *              one or more jack files.
+     */
+    private static void analyseSyntax(File input) {
+
+        if (input.isDirectory()) {
+            File[] inputFiles = input.listFiles();
+            for (File file:inputFiles) {
+                if (isJackFile(file)) {
+                    File outputFile = new File(file.getAbsolutePath().replaceAll(".jack",".xml"));
+                    CompilationEngine engine = new CompilationEngine(file,outputFile);
+                    engine.compileClass();
+                }
+            }
+        }
+        else {
+            File outputFile = new File(input.getAbsolutePath().replaceAll(".jack",".xml"));
+            CompilationEngine engine = new CompilationEngine(input,outputFile);
+            engine.compileClass();
         }
 
     }
 
     public static void main(String[] args) {
 
-        if(args.length != 1) {
+        if (args.length != 1) {
 
             System.out.println("Error: Expected one argument: <input file/dir name>");
             System.exit(1);
@@ -209,7 +237,9 @@ public class JackAnalyser {
         File input = new File(args[0]);
 
         validateInput(input);
-        tokenize(input);
+
+        // tokenize(input);
+        analyseSyntax(input);
 
     }
 

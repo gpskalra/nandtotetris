@@ -14,7 +14,9 @@ public class JackTokenizer {
     // set to null by the constructor
     private String currentToken;
 
-    private Reader inputReader;
+    private LineNumberReader inputReader;
+
+    private String inFileName;
 
     /**
      * Constructs a new tokeniser object to tokenise
@@ -25,14 +27,18 @@ public class JackTokenizer {
     public JackTokenizer(File file) {
 
         try {
-            inputReader = new BufferedReader(new FileReader(file));
+            inputReader = new LineNumberReader(new FileReader(file));
             currentToken = null;
+            inFileName = file.getName();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
+
     /**
-     * Returns true if the input stream has more tokens
+     * Returns true if the input stream has more tokens.
+     * If there are more tokens, moves the current file
+     * pointer to the beginning of the next token.
      *
      * @return true if there are more tokens among the
      *              remaining contents of the file. A file
@@ -334,11 +340,13 @@ public class JackTokenizer {
 
     /**
      * Advances in the input stream.
+     *
      * Sets the currentToken to the next token in the input
      * stream. Should be called only when hasMoreTokens returns
      * true. This ensures that we currently point to a location
      * in the input stream where the next character marks the
-     * beginning of some token.
+     * beginning of some token. The advance method then
+     * moves the file pointer to the end of the token.
      */
     public void advance() {
 
@@ -440,6 +448,25 @@ public class JackTokenizer {
     public String stringVal() {
         String stringVal = currentToken.replaceAll("([\"])(.*)([\"])","$2");
         return stringVal;
+    }
+
+    /**
+     * Returns the current line number in the
+     * input stream.
+     * @return line number of the currently
+     *         marked position in the input stream.
+     */
+    public int lineNumber() {
+        // getLineNumber starts line numbers from 0
+        return inputReader.getLineNumber() + 1;
+    }
+
+    /**
+     * returns the name of the input file.
+     * @return name of the input file.
+     */
+    public String fileName() {
+        return inFileName;
     }
 
 }
