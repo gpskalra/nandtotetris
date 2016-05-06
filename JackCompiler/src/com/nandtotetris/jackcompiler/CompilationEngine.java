@@ -3,9 +3,6 @@ package com.nandtotetris.jackcompiler;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  *
