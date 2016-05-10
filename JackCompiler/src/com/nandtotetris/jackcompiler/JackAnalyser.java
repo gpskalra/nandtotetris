@@ -121,7 +121,7 @@ public class JackAnalyser {
             File[] listOfInputFiles = input.listFiles();
 
             for (File file : listOfInputFiles) {
-                if (isJackFile(file)) {
+                if (Utils.isJackFile(file)) {
                     tokenizeFile(file);
                 }
             }
