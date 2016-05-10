@@ -1,3 +1,5 @@
 .idea/
 *.iml
 out/
+Sokoban/*.vm
+Sokoban/*.hack
