@@ -1,0 +1,7 @@
+#!/bin/sh
+
+JAVAHOME='/usr/bin/java'
+CLASSPATH='../out/production/JackCompiler'
+MAINCLASS='com.nandtotetris.jackcompiler.JackCompiler'
+
+$JAVAHOME -cp $CLASSPATH $MAINCLASS $1
