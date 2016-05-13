@@ -3,7 +3,7 @@ package com.nandtotetris.jackcompiler;
 import java.io.File;
 
 /**
- * 
+ *
  * @author gaganpreet1810@gmail.com
  */
 public class JackCompiler {
@@ -11,9 +11,9 @@ public class JackCompiler {
     /**
      * Driver for compilation.
      *
-     * For each input jack file, create a
-     * vm file. Invoke the
-     * compilation engine to write vm output.
+     * For each input jack file, create a xml file
+     * and a vm file. Invoke the
+     * compilation engine to write xml and vm output.
      *
      * @param input The input File object. Input can
      *              be a jack file or a directory with
@@ -25,15 +25,15 @@ public class JackCompiler {
             File[] inputFiles = input.listFiles();
             for (File file:inputFiles) {
                 if (Utils.isJackFile(file)) {
-                    File outputFile = new File(file.getAbsolutePath().replaceAll(".jack",".vm"));
-                    CompilationEngine engine = new CompilationEngine(file,outputFile);
+                    File outputVMFile = new File(file.getAbsolutePath().replaceAll(".jack",".vm"));
+                    CompilationEngine engine = new CompilationEngine(file,outputVMFile);
                     engine.compileClass();
                 }
             }
         }
         else {
-            File outputFile = new File(input.getAbsolutePath().replaceAll(".jack",".vm"));
-            CompilationEngine engine = new CompilationEngine(input,outputFile);
+            File outputVMFile = new File(input.getAbsolutePath().replaceAll(".jack",".vm"));
+            CompilationEngine engine = new CompilationEngine(input,outputVMFile);
             engine.compileClass();
         }
     }

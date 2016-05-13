@@ -1,7 +1,6 @@
 package com.nandtotetris.jackcompiler;
 
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class provides symbol table services for the
@@ -36,6 +35,7 @@ public class SymbolTable {
     public SymbolTable() {
         classScopeTable = new Hashtable<>();
         subroutineScopeTable = new Hashtable<>();
+        numSymbols = new HashMap<>();
         numSymbols.put(SymbolKind.STATIC,0);
         numSymbols.put(SymbolKind.FIELD,0);
         numSymbols.put(SymbolKind.ARG,0);
@@ -91,12 +91,17 @@ public class SymbolTable {
 
         if (hasClassScope(kind)) {
             classScopeTable.put(name,entry);
+            System.out.println("Symbol Added to classScopeTable");
         }
 
         else {
             subroutineScopeTable.put(name,entry);
+            System.out.println("Symbol Added to subroutineScopeTable");
         }
-
+        System.out.println("Name: " + name);
+        System.out.println("Type: " + typeOf(name));
+        System.out.println("Kind: " + kindOf(name));
+        System.out.println("Index: " + indexOf(name));
     }
 
     /**
@@ -157,5 +162,16 @@ public class SymbolTable {
             return classScopeTable.get(name).getIndex();
         }
         return -1;
+    }
+
+    /**
+     * Returns the number of variables of the given
+     * kind already defined in the current scope.
+     * @param kind the input SymbolKind
+     * @return The number of variables of SymbolKind
+     *         kind already defined.
+     */
+    public int varCount(SymbolKind kind) {
+        return numSymbols.get(kind);
     }
 }

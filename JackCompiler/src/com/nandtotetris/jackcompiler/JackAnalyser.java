@@ -17,6 +17,10 @@ import java.io.PrintWriter;
  * 3. Use the CompilationEngine module to compile the
  *    input JackTokenizer into the xxx.xml file.
  *
+ * For later projects the CompilationEngine is modified
+ * to write vm code instead of xml. Switch to the version
+ * of the code just after project 10 to use this class.
+ *
  * @author gaganpreet1810@gmail.com
  */
 public class JackAnalyser {

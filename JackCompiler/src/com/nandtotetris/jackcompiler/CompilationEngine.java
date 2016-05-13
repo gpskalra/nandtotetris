@@ -1,44 +1,35 @@
 package com.nandtotetris.jackcompiler;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 
 /**
- *
- * Whenever a compilexxx method is called,
- * the tokenizer's currentToken is set to the
- * first token that the compilexxx method has to
- * process.
+ * The main compilation engine. This class
+ * performs a recursive top down parsing
+ * and compilation. The first method to be
+ * called after constructor should be
+ * compileClass.
  *
  * @author gaganpreet1810@gmail.com
  */
 public class CompilationEngine {
 
-    PrintWriter outputWriter;
+    VMWriter codeWriter;
     JackTokenizer tokenizer;
-    private boolean lastSymbolReached;
+    SymbolTable symbolTable;
 
     /**
      * Creates a new compilation engine with
      * the given input and output. The next routine
-     * called must be compileClass since the constructor
-     * calls advance() to make sure that tokenizer's
-     * currentToken is the first token.
+     * called must be compileClass.
      *
      * @param inputFile File object for the
      *                  input jack file
-     * @param outputFile The output xml file (TBD)
+     * @param outputVMFile The output vm file
      */
-    public CompilationEngine(File inputFile,File outputFile) {
-        try {
-            outputWriter = new PrintWriter(outputFile);
-            tokenizer = new JackTokenizer(inputFile);
-            lastSymbolReached = false;
-            advance();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+    public CompilationEngine(File inputFile,File outputVMFile) {
+        codeWriter = new VMWriter(outputVMFile);
+        tokenizer = new JackTokenizer(inputFile);
+        symbolTable = new SymbolTable();
     }
 
     /**
@@ -46,70 +37,96 @@ public class CompilationEngine {
      */
     public void compileClass() {
 
-        outputWriter.println("<class>");
+        String className;
 
-        // class
-        compileKeyword(Keyword.CLASS);
-        // className
-        compileIdentifier();
-        // {
-        compileSymbol('{');
-        // classVarDec* subroutineDec*
+        advance();
+        checkToken(TokenType.TOKEN_KEYWORD);
+        checkKeyword(Keyword.CLASS);
+
+        advance();
+        checkToken(TokenType.TOKEN_IDENTIFIER);
+        className = tokenizer.identifier();
+
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('{');
+
+        advance();
         while (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD &&
                 (tokenizer.keyword()==Keyword.STATIC ||
                         tokenizer.keyword()==Keyword.FIELD)) {
 
-            compileClassVarDec(tokenizer.keyword());
+            compileClassVarDec();
+            advance();
         }
         while (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD &&
                 (tokenizer.keyword()==Keyword.CONSTRUCTOR ||
                         tokenizer.keyword()==Keyword.FUNCTION ||
                         tokenizer.keyword()==Keyword.METHOD)) {
 
-            compileSubroutine(tokenizer.keyword());
+            compileSubroutine(className);
+            advance();
         }
 
-        // }
-        lastSymbolReached = true;
-        compileSymbol('}');
-
-        outputWriter.println("</class>");
-        outputWriter.close();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('}');
+        codeWriter.close();
     }
 
     /**
      * Compiles a complete subroutine: method,
      * function or constructor.
      *
-     * @param keyword keyword determining whether it
-     *                is a method, function or
-     *                constructor.
+     * @param className className to be used to
+     *                  write vm code.
      */
-    private void compileSubroutine(Keyword keyword) {
+    private void compileSubroutine(String className) {
 
-        // System.out.println("Info: Compiling Subroutine");
-        outputWriter.println("<subroutineDec>");
+        boolean isReturnTypeVoid = false;
+        String subroutineName = null;
 
-        // method, function or constructor
-        compileKeyword(keyword);
+        // start a new scope
+        symbolTable.startSubroutine();
 
+        /*
+        switch (tokenizer.keyword()) {
+            case CONSTRUCTOR:
+                int numFields = symbolTable.varCount(SymbolKind.FIELD);
+                codeWriter.writePush(Segment.CONST,numFields);
+                codeWriter.writeCall("Memory.alloc",1);
+                codeWriter.writePop(Segment.POINTER,0);
+                break;
+            case METHOD:
+                break;
+            case FUNCTION:
+                break;
+        }*/
+
+        // ignore return type, assuming error free code
         // return type: (void | type)
+        advance();
         if (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
                 && tokenizer.keyword()==Keyword.VOID) {
-            compileKeyword(Keyword.VOID);
-        }
-        else {
-            compileType();
+            isReturnTypeVoid = true;
         }
 
         // subroutineName
-        compileIdentifier();
-        compileSymbol('(');
-        compileParameterList();
-        compileSymbol(')');
-        compileSubroutineBody();
+        advance();
+        checkToken(TokenType.TOKEN_IDENTIFIER);
+        subroutineName = tokenizer.identifier();
 
-        outputWriter.println("</subroutineDec>");
+        // (
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('(');
+
+        compileParameterList();
+
+        // )
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(')');
+
+        compileSubroutineBody();
     }
 
     /**
@@ -117,25 +134,25 @@ public class CompilationEngine {
      */
     private void compileSubroutineBody() {
 
-        outputWriter.println("<subroutineBody>");
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('{');
 
-        compileSymbol('{');
-        while (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
+        /*while (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
                 && tokenizer.keyword()==Keyword.VAR) {
             compileVarDec();
         }
-        compileStatements();
-        compileSymbol('}');
+        compileStatements();*/
 
-        outputWriter.println("</subroutineBody>");
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('}');
     }
 
     /**
      * Compiles a sequence of zero or more statements.
      */
     private void compileStatements() {
-
-        outputWriter.println("<statements>");
 
         while (tokenizer.tokenType() == TokenType.TOKEN_KEYWORD) {
 
@@ -164,15 +181,12 @@ public class CompilationEngine {
             }
         }
 
-        outputWriter.println("</statements>");
     }
 
     /**
      * Compiles a return statement
      */
     private void compileReturnStatement() {
-
-        outputWriter.println("<returnStatement>");
 
         compileKeyword(Keyword.RETURN);
 
@@ -181,8 +195,6 @@ public class CompilationEngine {
             compileExpression();
         }
         compileSymbol(';');
-
-        outputWriter.println("</returnStatement>");
     }
 
     /**
@@ -206,15 +218,12 @@ public class CompilationEngine {
      * Compiles a jack expression.
      */
     private void compileExpression() {
-
-        outputWriter.println("<expression>");
         compileTerm();
         while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && isOp(tokenizer.symbol())) {
             compileSymbol(tokenizer.symbol());
             compileTerm();
         }
-        outputWriter.println("</expression>");
     }
 
     /**
@@ -222,19 +231,11 @@ public class CompilationEngine {
      */
     private void compileTerm() {
 
-        outputWriter.println("<term>");
-
         switch (tokenizer.tokenType()) {
             case TOKEN_INT_CONST:
-                outputWriter.print("<integerConstant>");
-                outputWriter.print(tokenizer.intVal());
-                outputWriter.print("</integerConstant>\n");
                 advance();
                 break;
             case TOKEN_STRING_CONST:
-                outputWriter.print("<stringConstant>");
-                outputWriter.print(tokenizer.stringVal());
-                outputWriter.print("</stringConstant>\n");
                 advance();
                 break;
             case TOKEN_KEYWORD:
@@ -297,20 +298,15 @@ public class CompilationEngine {
                 }
                 break;
         }
-
-        outputWriter.println("</term>");
-
     }
 
     /**
      * Compiles a do statement.
      */
     private void compileDoStatement() {
-        outputWriter.println("<doStatement>");
         compileKeyword(Keyword.DO);
         compileSubroutineCall();
         compileSymbol(';');
-        outputWriter.println("</doStatement>");
     }
 
     /**
@@ -354,25 +350,21 @@ public class CompilationEngine {
      * (expression(','expression)*)?
      */
     private void compileExpressionList() {
-        outputWriter.println("<expressionList>");
         if (!(tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && tokenizer.symbol()==')')) {
             compileExpression();
-            while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
-                    && tokenizer.symbol()==',') {
+            while (tokenizer.tokenType() == TokenType.TOKEN_SYMBOL
+                    && tokenizer.symbol() == ',') {
                 compileSymbol(',');
                 compileExpression();
             }
         }
-        outputWriter.println("</expressionList>");
     }
 
     /**
      * Compiles a while Statement
      */
     private void compileWhileStatement() {
-
-        outputWriter.println("<whileStatement>");
 
         compileKeyword(Keyword.WHILE);
         compileSymbol('(');
@@ -382,15 +374,12 @@ public class CompilationEngine {
         compileStatements();
         compileSymbol('}');
 
-        outputWriter.println("</whileStatement>");
     }
 
     /**
      * Compiles an if statement
      */
     private void compileIfStatement() {
-
-        outputWriter.println("<ifStatement>");
 
         compileKeyword(Keyword.IF);
         compileSymbol('(');
@@ -408,15 +397,12 @@ public class CompilationEngine {
             compileSymbol('}');
         }
 
-        outputWriter.println("</ifStatement>");
     }
 
     /**
      * Compiles a let statement
      */
     private void compileLetStatement() {
-
-        outputWriter.println("<letStatement>");
 
         compileKeyword(Keyword.LET);
         compileIdentifier();
@@ -443,8 +429,6 @@ public class CompilationEngine {
 
         compileExpression();
         compileSymbol(';');
-
-        outputWriter.println("</letStatement>");
     }
 
     /**
@@ -452,8 +436,6 @@ public class CompilationEngine {
      * subroutine.
      */
     private void compileVarDec() {
-
-        outputWriter.println("<varDec>");
 
         compileKeyword(Keyword.VAR);
 
@@ -469,8 +451,6 @@ public class CompilationEngine {
 
         // ;
         compileSymbol(';');
-
-        outputWriter.println("</varDec>");
     }
 
     /**
@@ -478,66 +458,143 @@ public class CompilationEngine {
      */
     private void compileParameterList() {
 
-        outputWriter.println("<parameterList>");
+        String symbolType = null;
+        String symbolName = null;
 
+        advance();
         if (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && tokenizer.symbol()==')') {
-            outputWriter.println("</parameterList>");
             return;
         }
 
-        compileType();
-        compileIdentifier();
-
+        symbolType = compileType();
+        advance();
+        checkToken(TokenType.TOKEN_IDENTIFIER);
+        symbolName = tokenizer.identifier();
+        symbolTable.define(symbolName,symbolType,SymbolKind.ARG);
+        advance();
         while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && tokenizer.symbol()==',') {
-            compileSymbol(',');
-            compileType();
-            compileIdentifier();
+            advance();
+            symbolType = compileType();
+            advance();
+            checkToken(TokenType.TOKEN_IDENTIFIER);
+            symbolName = compileIdentifier();
+            symbolTable.define(symbolName,symbolType,SymbolKind.ARG);
+            advance();
         }
-
-        outputWriter.println("</parameterList>");
-
     }
 
     /**
      * Compiles a class variable declaration. The caller
      * (compileClass) sees the first token to decide it
-     * is a class variable declaration. The input stream
-     * is advanced over the first token.
-     *
-     * @param keyword Describes the type of variable.
-     *                Possible values: static, field
+     * is a class variable declaration. The currentToken
+     * is the first token of the declaration.
      */
-    private void compileClassVarDec(Keyword keyword) {
+    private void compileClassVarDec() {
 
-        // System.out.println("Info: Compiling Class Variable Declaration");
-
-        outputWriter.println("<classVarDec>");
+        Keyword symbolKindKeyword;
+        String symbolType;
+        String symbolName;
+        SymbolKind symbolKind;
 
         // static | field
-        compileKeyword(keyword);
+        symbolKindKeyword = tokenizer.keyword();
+
         // type
-        compileType();
+        advance();
+        symbolType = compileType();
+
         // varName
-        compileIdentifier();
+        advance();
+        checkToken(TokenType.TOKEN_IDENTIFIER);
+        symbolName = tokenizer.identifier();
+
+        // add to symbol table
+        symbolKind = (symbolKindKeyword == Keyword.STATIC)
+                ? SymbolKind.STATIC : SymbolKind.FIELD;
+        symbolTable.define(symbolName,symbolType,symbolKind);
+
+        advance();
         // (,varName)*;
         while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && tokenizer.symbol()==',') {
 
-            compileSymbol(',');
-            compileIdentifier();
-        }
-        // ;
-        compileSymbol(';');
+            // varName
+            advance();
+            checkToken(TokenType.TOKEN_IDENTIFIER);
+            symbolName = tokenizer.identifier();
 
-        outputWriter.println("</classVarDec>");
+            // add to symbol table
+            symbolTable.define(symbolName,symbolType,symbolKind);
+
+            advance();
+        }
+
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(';');
     }
 
-    private void compileType() {
+    /**
+     * Verifies that the current token's
+     * token type matches the input token
+     * type. If it does not, report an error.
+     * @param tokenType the input TokenType
+     */
+    private void checkToken(TokenType tokenType) {
+        if (tokenizer.tokenType() != tokenType) {
+            System.out.println("Error: In file " + tokenizer.fileName()
+                    + " line " + tokenizer.lineNumber()
+                    + " current token type " + tokenizer.tokenType()
+                    + " expected token type " + tokenType.toString());
+        }
+    }
 
+    /**
+     * Checks whether the current token
+     * (which must be a symbol)
+     * matches the input symbol.
+     * @param symbol The input symbol
+     */
+    private void checkSymbol(char symbol) {
+
+        if (tokenizer.symbol() != symbol) {
+            System.out.println("Error: In file " + tokenizer.fileName()
+                    + " line " + tokenizer.lineNumber()
+                    + " symbol " + tokenizer.symbol()
+                    + " does not match expected symbol "
+                    + symbol);
+        }
+
+    }
+
+    /**
+     * Checks whether the current token
+     * (which must be a keyword)
+     * matches the input keyword.
+     * @param keyword The input keyword
+     */
+    private void checkKeyword(Keyword keyword) {
+        if (tokenizer.keyword() != keyword) {
+            System.out.println("Error: In file " + tokenizer.fileName()
+                    + " line " + tokenizer.lineNumber()
+                    + " keyword " + tokenizer.keyword()
+                    + " does not match expected keyword "
+                    + keyword);
+        }
+    }
+
+    /**
+     * Compiles a type. A type is either a primitive
+     * type: int, char, boolean or an identifier.
+     *
+     * @return The String representation of the type
+     */
+    private String compileType() {
+
+        String type = null;
         if (tokenizer.tokenType() == TokenType.TOKEN_IDENTIFIER) {
-            compileIdentifier();
+            type = tokenizer.identifier();
         }
         else {
             if (tokenizer.tokenType() == TokenType.TOKEN_KEYWORD) {
@@ -546,21 +603,20 @@ public class CompilationEngine {
                         tokenizer.keyword() == Keyword.BOOLEAN)) {
                     System.out.println("Error: In file " + tokenizer.fileName()
                             + " line " + tokenizer.lineNumber()
-                            + " CompilationEngine.compileType Expected one of: int, "
+                            + " Expected one of: int, "
                             + "char, boolean keyword");
-                    System.exit(1);
                 }
                 else {
-                    compileKeyword(tokenizer.keyword());
+                    type = tokenizer.keyword().getKeywordString();
                 }
             }
             else {
                 System.out.println("Error: In file " + tokenizer.fileName()
                         + " line " + tokenizer.lineNumber()
-                        + " CompilationEngine.compileType Expected 'type'");
-                System.exit(1);
+                        + " Expected 'type'");
             }
         }
+        return type;
     }
 
     /**
@@ -575,6 +631,7 @@ public class CompilationEngine {
      */
     private void compileKeyword(Keyword keyword) {
 
+        advance();
         if (tokenizer.tokenType() != TokenType.TOKEN_KEYWORD) {
             System.out.println("Error: In file " + tokenizer.fileName()
                     + " line " + tokenizer.lineNumber()
@@ -592,28 +649,14 @@ public class CompilationEngine {
                     tokenizer.keyword().getKeywordString());
             System.exit(1);
         }
-
-        outputWriter.println("<keyword>" + tokenizer.keyword().getKeywordString() + "</keyword>");
-        advance();
     }
 
     /**
-     * Compiles an identifier. Checks that
-     * the current token is an identifier.
-     *
-     * Writes xml output for an identifier.
+     * Compiles an identifier.
+     * @return the identifier string
      */
-    private void compileIdentifier() {
-
-        if (tokenizer.tokenType() != TokenType.TOKEN_IDENTIFIER) {
-            System.out.println("Error: In file " + tokenizer.fileName()
-                    + " line " + tokenizer.lineNumber()
-                    + " CompilationEngine.compileIdentifier Identifier expected");
-            System.exit(1);
-        }
-
-        outputWriter.println("<identifier>" + tokenizer.identifier() + "</identifier>");
-        advance();
+    private String compileIdentifier() {
+        return tokenizer.identifier();
     }
 
     /**
@@ -627,6 +670,8 @@ public class CompilationEngine {
      *                symbol should match.
      */
     private void compileSymbol(char symbol) {
+
+        advance();
 
         if (tokenizer.tokenType() != TokenType.TOKEN_SYMBOL) {
             System.out.println("Error: In file " + tokenizer.fileName()
@@ -643,25 +688,16 @@ public class CompilationEngine {
             System.exit(1);
         }
 
-        if (tokenizer.symbol()=='<') {
-            outputWriter.println("<symbol> &lt; </symbol>");
-        }
-        else {
-            if (tokenizer.symbol()=='>') {
-                outputWriter.println("<symbol> &gt; </symbol>");
-            }
-            else {
-                if (tokenizer.symbol()=='&') {
-                    outputWriter.println("<symbol> &amp; </symbol>");
-                }
-                else {
-                    outputWriter.println("<symbol>" + tokenizer.symbol() + "</symbol>");
-                }
-            }
-        }
+        switch (tokenizer.symbol()) {
+            case '<':
 
-        if (!lastSymbolReached) {
-            advance();
+                break;
+            case '>':
+                break;
+            case '&':
+                break;
+            default:
+                break;
         }
     }
 
@@ -674,15 +710,12 @@ public class CompilationEngine {
      * tokenizer.advance()
      */
     private void advance() {
-
         if (!tokenizer.hasMoreTokens()) {
             System.out.println("Error: In file " + tokenizer.fileName()
                     + " line " + tokenizer.lineNumber()
-                    + " CompilationEngine.advance more tokens expected");
-            System.exit(1);
+                    + " more tokens expected");
+            return;
         }
-
         tokenizer.advance();
-        // System.out.println("Current Token = " + tokenizer.getCurrentToken());
     }
 }
