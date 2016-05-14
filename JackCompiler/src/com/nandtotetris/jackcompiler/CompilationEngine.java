@@ -16,7 +16,10 @@ public class CompilationEngine {
     VMWriter codeWriter;
     JackTokenizer tokenizer;
     SymbolTable symbolTable;
-
+    String className;
+    String currentSubroutine;
+    String returnType;
+    String currentSubroutineType;
     /**
      * Creates a new compilation engine with
      * the given input and output. The next routine
@@ -37,7 +40,7 @@ public class CompilationEngine {
      */
     public void compileClass() {
 
-        String className;
+        // String className;
 
         advance();
         checkToken(TokenType.TOKEN_KEYWORD);
@@ -64,7 +67,7 @@ public class CompilationEngine {
                         tokenizer.keyword()==Keyword.FUNCTION ||
                         tokenizer.keyword()==Keyword.METHOD)) {
 
-            compileSubroutine(className);
+            compileSubroutine();
             advance();
         }
 
@@ -76,32 +79,23 @@ public class CompilationEngine {
     /**
      * Compiles a complete subroutine: method,
      * function or constructor.
-     *
-     * @param className className to be used to
-     *                  write vm code.
      */
-    private void compileSubroutine(String className) {
+    private void compileSubroutine() {
 
-        String subroutineType;
-        String subroutineName;
-        boolean isReturnTypeVoid = false;
 
-        subroutineType = tokenizer.keyword().getKeywordString();
+        currentSubroutineType = tokenizer.keyword().getKeywordString();
         // start a new scope
         symbolTable.startSubroutine();
 
         // ignore return type, assuming error free code
         // return type: (void | type)
         advance();
-        if (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
-                && tokenizer.keyword()==Keyword.VOID) {
-            isReturnTypeVoid = true;
-        }
+        returnType = compileReturnType();
 
         // subroutineName
         advance();
         checkToken(TokenType.TOKEN_IDENTIFIER);
-        subroutineName = tokenizer.identifier();
+        currentSubroutine = tokenizer.identifier();
 
         // (
         advance();
@@ -114,14 +108,44 @@ public class CompilationEngine {
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol(')');
 
-        compileSubroutineBody(className,subroutineName,subroutineType,isReturnTypeVoid);
+        compileSubroutineBody();
+    }
+
+    private String compileReturnType() {
+
+        String type = null;
+        if (tokenizer.tokenType() == TokenType.TOKEN_IDENTIFIER) {
+            type = tokenizer.identifier();
+        }
+        else {
+            if (tokenizer.tokenType() == TokenType.TOKEN_KEYWORD) {
+                if (!(tokenizer.keyword() == Keyword.INT ||
+                        tokenizer.keyword() == Keyword.CHAR ||
+                        tokenizer.keyword() == Keyword.BOOLEAN ||
+                tokenizer.keyword() == Keyword.VOID)) {
+                    System.out.println("Error: In file " + tokenizer.fileName()
+                            + " line " + tokenizer.lineNumber()
+                            + " Expected one of: int, "
+                            + "char, boolean, void keyword");
+                }
+                else {
+                    type = tokenizer.keyword().getKeywordString();
+                }
+            }
+            else {
+                System.out.println("Error: In file " + tokenizer.fileName()
+                        + " line " + tokenizer.lineNumber()
+                        + " Expected 'return type'");
+            }
+        }
+        return type;
     }
 
     /**
      * Compiles a subroutine body.
      */
-    private void compileSubroutineBody(String className,String subroutineName,
-                                       String subroutineType, boolean isReturnTypeVoid) {
+    private void compileSubroutineBody() {
+
         advance();
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('{');
@@ -135,11 +159,11 @@ public class CompilationEngine {
 
         // write vm function
         int numLocals = symbolTable.varCount(SymbolKind.VAR);
-        codeWriter.writeFunction(className+"."+subroutineName,numLocals);
+        codeWriter.writeFunction(className + "." + currentSubroutine,numLocals);
 
         // constructor should allocate memory for the object and set this pointer.
         // method should should set this pointer.
-        switch (subroutineType) {
+        switch (currentSubroutineType) {
             case "constructor":
                 int numFields = symbolTable.varCount(SymbolKind.FIELD);
                 codeWriter.writePush(Segment.CONST,numFields);
@@ -154,8 +178,7 @@ public class CompilationEngine {
                 break;
         }
 
-        // compileStatements();
-
+        compileStatements();
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('}');
     }
@@ -197,13 +220,19 @@ public class CompilationEngine {
      */
     private void compileReturnStatement() {
 
-        compileKeyword(Keyword.RETURN);
+        advance();
 
-        if (!((tokenizer.tokenType() == TokenType.TOKEN_SYMBOL)
-                && (tokenizer.symbol()==';'))) {
-            compileExpression();
+        if (returnType == "void") {
+            checkToken(TokenType.TOKEN_SYMBOL);
+            checkSymbol(';');
+            codeWriter.writePush(Segment.CONST,0);
+            codeWriter.writeReturn();
+            return;
+
         }
-        compileSymbol(';');
+
+        compileExpression();
+        codeWriter.writeReturn();
     }
 
     /**

@@ -17,9 +17,12 @@ class Square {
     field int size;
 
     static Arena a,b;
-
+    /*
     constructor Square new(int a,int b) {
         var int c,d;
         var Arena e;	
-    }    
+    }*/ 
+    method void abc(int x) {
+        return; 
+    }   
 }
