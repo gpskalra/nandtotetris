@@ -82,25 +82,13 @@ public class CompilationEngine {
      */
     private void compileSubroutine(String className) {
 
+        String subroutineType;
+        String subroutineName;
         boolean isReturnTypeVoid = false;
-        String subroutineName = null;
 
+        subroutineType = tokenizer.keyword().getKeywordString();
         // start a new scope
         symbolTable.startSubroutine();
-
-        /*
-        switch (tokenizer.keyword()) {
-            case CONSTRUCTOR:
-                int numFields = symbolTable.varCount(SymbolKind.FIELD);
-                codeWriter.writePush(Segment.CONST,numFields);
-                codeWriter.writeCall("Memory.alloc",1);
-                codeWriter.writePop(Segment.POINTER,0);
-                break;
-            case METHOD:
-                break;
-            case FUNCTION:
-                break;
-        }*/
 
         // ignore return type, assuming error free code
         // return type: (void | type)
@@ -126,25 +114,48 @@ public class CompilationEngine {
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol(')');
 
-        compileSubroutineBody();
+        compileSubroutineBody(className,subroutineName,subroutineType,isReturnTypeVoid);
     }
 
     /**
      * Compiles a subroutine body.
      */
-    private void compileSubroutineBody() {
-
+    private void compileSubroutineBody(String className,String subroutineName,
+                                       String subroutineType, boolean isReturnTypeVoid) {
         advance();
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('{');
 
-        /*while (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
+        advance();
+        while (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
                 && tokenizer.keyword()==Keyword.VAR) {
             compileVarDec();
+            advance();
         }
-        compileStatements();*/
 
-        advance();
+        // write vm function
+        int numLocals = symbolTable.varCount(SymbolKind.VAR);
+        codeWriter.writeFunction(className+"."+subroutineName,numLocals);
+
+        // constructor should allocate memory for the object and set this pointer.
+        // method should should set this pointer.
+        switch (subroutineType) {
+            case "constructor":
+                int numFields = symbolTable.varCount(SymbolKind.FIELD);
+                codeWriter.writePush(Segment.CONST,numFields);
+                codeWriter.writeCall("Memory.alloc",1);
+                codeWriter.writePop(Segment.POINTER,0);
+                break;
+            case "method":
+                codeWriter.writePush(Segment.ARG,0);
+                codeWriter.writePop(Segment.POINTER,0);
+                break;
+            default:
+                break;
+        }
+
+        // compileStatements();
+
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('}');
     }
@@ -155,7 +166,6 @@ public class CompilationEngine {
     private void compileStatements() {
 
         while (tokenizer.tokenType() == TokenType.TOKEN_KEYWORD) {
-
             switch (tokenizer.keyword()) {
                 case LET:
                     compileLetStatement();
@@ -176,11 +186,10 @@ public class CompilationEngine {
                     System.out.println("Error: In file " + tokenizer.fileName()
                             + " line " + tokenizer.lineNumber()
                             + " Expected one of: let if while do return");
-                    System.exit(1);
                     break;
             }
+            advance();
         }
-
     }
 
     /**
@@ -437,20 +446,30 @@ public class CompilationEngine {
      */
     private void compileVarDec() {
 
-        compileKeyword(Keyword.VAR);
+        String symbolType = null;
+        String symbolName = null;
 
-        compileType();
-        compileIdentifier();
+        advance();
+        symbolType = compileType();
 
+        advance();
+        checkToken(TokenType.TOKEN_IDENTIFIER);
+        symbolName = tokenizer.identifier();
+        symbolTable.define(symbolName,symbolType,SymbolKind.VAR);
+
+        advance();
         while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && tokenizer.symbol()==',') {
-
-            compileSymbol(',');
-            compileIdentifier();
+            advance();
+            checkToken(TokenType.TOKEN_IDENTIFIER);
+            symbolName = tokenizer.identifier();
+            symbolTable.define(symbolName,symbolType,SymbolKind.VAR);
+            advance();
         }
 
         // ;
-        compileSymbol(';');
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(';');
     }
 
     /**

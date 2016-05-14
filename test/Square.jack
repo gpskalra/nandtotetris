@@ -19,5 +19,7 @@ class Square {
     static Arena a,b;
 
     constructor Square new(int a,int b) {
+        var int c,d;
+        var Arena e;	
     }    
 }
