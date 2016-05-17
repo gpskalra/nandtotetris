@@ -1,5 +1,26 @@
 function Square.abc 0
 push argument 0
 pop pointer 0
+pop temp 0
+push this 0
+add
+pop pointer 1
+push temp 0
+pop that 0
+not
+if-goto IF_FALSE0
+pop temp 0
+push this 0
+add
+pop pointer 1
+push temp 0
+pop that 0
+label IF_FALSE0
+pop temp 0
+push this 0
+add
+pop pointer 1
+push temp 0
+pop that 0
 push constant 0
 return

@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 public class VMWriter {
 
     private PrintWriter outputWriter;
-
     public VMWriter(File outputFile) {
         try {
             outputWriter = new PrintWriter(outputFile);

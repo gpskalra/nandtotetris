@@ -11,18 +11,25 @@
 class Square {
 
     // Location on the screen
-    field int x, y;
+    field Array y;
 
     // The size of the square
-    field int size;
+    // field int size;
 
-    static Arena a,b;
+    // static Arena a,b;
     /*
     constructor Square new(int a,int b) {
         var int c,d;
         var Arena e;	
     }*/ 
     method void abc(int x) {
+        let y[2] = 5;
+        if (2) {
+            let y[1]=1;
+        }
+        else {
+            let y[3]=6;
+        }
         return; 
     }   
 }

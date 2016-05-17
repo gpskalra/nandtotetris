@@ -20,6 +20,7 @@ public class CompilationEngine {
     String currentSubroutine;
     String returnType;
     String currentSubroutineType;
+    int labelCount;
     /**
      * Creates a new compilation engine with
      * the given input and output. The next routine
@@ -33,6 +34,7 @@ public class CompilationEngine {
         codeWriter = new VMWriter(outputVMFile);
         tokenizer = new JackTokenizer(inputFile);
         symbolTable = new SymbolTable();
+        labelCount = 0;
     }
 
     /**
@@ -232,6 +234,8 @@ public class CompilationEngine {
         }
 
         compileExpression();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(';');
         codeWriter.writeReturn();
     }
 
@@ -256,12 +260,16 @@ public class CompilationEngine {
      * Compiles a jack expression.
      */
     private void compileExpression() {
+
+        advance();
+        /*
         compileTerm();
+
         while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
                 && isOp(tokenizer.symbol())) {
             compileSymbol(tokenizer.symbol());
             compileTerm();
-        }
+        }*/
     }
 
     /**
@@ -271,9 +279,17 @@ public class CompilationEngine {
 
         switch (tokenizer.tokenType()) {
             case TOKEN_INT_CONST:
+                codeWriter.writePush(Segment.CONST,tokenizer.intVal());
                 advance();
                 break;
             case TOKEN_STRING_CONST:
+                int stringLength = tokenizer.stringVal().length();
+                codeWriter.writePush(Segment.CONST,stringLength);
+                codeWriter.writeCall("String.new",1);
+                for(int i=0;i<stringLength;i++) {
+                    codeWriter.writePush(Segment.CONST,(int) tokenizer.stringVal().charAt(i));
+                    codeWriter.writeCall("String.appendChar",2);
+                }
                 advance();
                 break;
             case TOKEN_KEYWORD:
@@ -320,11 +336,13 @@ public class CompilationEngine {
                         compileSymbol('[');
                         compileExpression();
                         compileSymbol(']');
+                        break;
                     }
                     if (tokenizer.symbol() == '(') {
                         compileSymbol('(');
                         compileExpressionList();
                         compileSymbol(')');
+                        break;
                     }
                     if (tokenizer.symbol() == '.') {
                         compileSymbol('.');
@@ -332,6 +350,7 @@ public class CompilationEngine {
                         compileSymbol('(');
                         compileExpressionList();
                         compileSymbol(')');
+                        break;
                     }
                 }
                 break;
@@ -419,22 +438,36 @@ public class CompilationEngine {
      */
     private void compileIfStatement() {
 
-        compileKeyword(Keyword.IF);
-        compileSymbol('(');
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('(');
+        advance();
         compileExpression();
-        compileSymbol(')');
-        compileSymbol('{');
+        // if condition expression is at the top of stack
+        codeWriter.writeArithmetic(ArithmeticCommand.NOT);
+        codeWriter.writeIf("IF_FALSE"+labelCount);
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(')');
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('{');
+        advance();
         compileStatements();
-        compileSymbol('}');
-
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('}');
+        advance();
+        codeWriter.writeLabel("IF_FALSE"+labelCount);
         if (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
                 && tokenizer.keyword()==Keyword.ELSE) {
-            compileKeyword(Keyword.ELSE);
-            compileSymbol('{');
+            advance();
+            checkToken(TokenType.TOKEN_SYMBOL);
+            checkSymbol('{');
+            advance();
             compileStatements();
-            compileSymbol('}');
+            checkToken(TokenType.TOKEN_SYMBOL);
+            checkSymbol('}');
         }
-
+        labelCount = labelCount + 1;
     }
 
     /**
@@ -442,31 +475,71 @@ public class CompilationEngine {
      */
     private void compileLetStatement() {
 
-        compileKeyword(Keyword.LET);
-        compileIdentifier();
+        String symbolName;
+        Segment memorySegment = null;
 
-        if (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL) {
-            switch (tokenizer.symbol()) {
-                case '=':
-                    compileSymbol('=');
-                    break;
-                case '[':
-                    compileSymbol('[');
-                    compileExpression();
-                    compileSymbol(']');
-                    compileSymbol('=');
-                    break;
-                default:
-                    System.out.println("Error: In file " + tokenizer.fileName()
-                            + " line " + tokenizer.lineNumber()
-                            + " Expected one of: '[' '=' ");
-                    System.exit(1);
-                    break;
-            }
+        advance();
+        checkToken(TokenType.TOKEN_IDENTIFIER);
+        symbolName = tokenizer.identifier();
+        switch(symbolTable.kindOf(symbolName)) {
+            case STATIC:
+                memorySegment = Segment.STATIC;
+                break;
+            case FIELD:
+                memorySegment = Segment.THIS;
+                break;
+            case ARG:
+                memorySegment = Segment.ARG;
+                break;
+            case VAR:
+                memorySegment = Segment.LOCAL;
+                break;
+        }
+
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        switch (tokenizer.symbol()) {
+            case '=':
+                advance();
+                break;
+            case '[':
+                advance();
+                compileExpression();
+                checkToken(TokenType.TOKEN_SYMBOL);
+                checkSymbol(']');
+                advance();
+                checkToken(TokenType.TOKEN_SYMBOL);
+                checkSymbol('=');
+                advance();
+                break;
+            default:
+                System.out.println("Error: In file " + tokenizer.fileName()
+                        + " line " + tokenizer.lineNumber()
+                        + " Expected one of: '[' '=' ");
+                break;
         }
 
         compileExpression();
-        compileSymbol(';');
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(';');
+
+        // In case of an array entry, the stack top has the
+        // expression. The second to top entry is the index
+        // into the array.
+        if (symbolTable.typeOf(symbolName).equals("Array")) {
+            // pop rvalue
+            codeWriter.writePop(Segment.TEMP,0);
+            // set "that" segment
+            codeWriter.writePush(memorySegment,symbolTable.indexOf(symbolName));
+            codeWriter.writeArithmetic(ArithmeticCommand.ADD);
+            codeWriter.writePop(Segment.POINTER,1);
+            // use pop that 0 to do the final assignment
+            codeWriter.writePush(Segment.TEMP,0);
+            codeWriter.writePop(Segment.THAT,0);
+        }
+        else {
+            codeWriter.writePop(memorySegment,symbolTable.indexOf(symbolName));
+        }
     }
 
     /**
