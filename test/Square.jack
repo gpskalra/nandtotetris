@@ -23,12 +23,15 @@ class Square {
         var Arena e;	
     }*/ 
     method void abc(int x) {
-        let y[2] = 5;
+        let y = 5;
         if (2) {
             let y[1]=1;
         }
         else {
             let y[3]=6;
+        }
+        while (1) {
+            let y[2]=3;
         }
         return; 
     }   

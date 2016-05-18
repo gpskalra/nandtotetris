@@ -1,12 +1,7 @@
 function Square.abc 0
 push argument 0
 pop pointer 0
-pop temp 0
-push this 0
-add
-pop pointer 1
-push temp 0
-pop that 0
+pop this 0
 not
 if-goto IF_FALSE0
 pop temp 0
@@ -22,5 +17,16 @@ add
 pop pointer 1
 push temp 0
 pop that 0
+label WHILE1
+not
+if-goto IF_FALSE1
+pop temp 0
+push this 0
+add
+pop pointer 1
+push temp 0
+pop that 0
+goto WHILE1
+label IF_FALSE1
 push constant 0
 return

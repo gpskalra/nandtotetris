@@ -361,9 +361,13 @@ public class CompilationEngine {
      * Compiles a do statement.
      */
     private void compileDoStatement() {
-        compileKeyword(Keyword.DO);
+        advance();
         compileSubroutineCall();
-        compileSymbol(';');
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(';');
+        codeWriter.writePop(Segment.TEMP,0);
+        codeWriter.writeReturn();
     }
 
     /**
@@ -423,14 +427,26 @@ public class CompilationEngine {
      */
     private void compileWhileStatement() {
 
-        compileKeyword(Keyword.WHILE);
-        compileSymbol('(');
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('(');
+        advance();
+        codeWriter.writeLabel("WHILE"+labelCount);
         compileExpression();
-        compileSymbol(')');
-        compileSymbol('{');
+        codeWriter.writeArithmetic(ArithmeticCommand.NOT);
+        codeWriter.writeIf("IF_FALSE"+labelCount);
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol(')');
+        advance();
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('{');
+        advance();
         compileStatements();
-        compileSymbol('}');
-
+        codeWriter.writeGoto("WHILE"+labelCount);
+        checkToken(TokenType.TOKEN_SYMBOL);
+        checkSymbol('}');
+        codeWriter.writeLabel("IF_FALSE"+labelCount);
+        labelCount = labelCount + 1;
     }
 
     /**
@@ -498,11 +514,13 @@ public class CompilationEngine {
 
         advance();
         checkToken(TokenType.TOKEN_SYMBOL);
+        boolean isArrayEntry = false;
         switch (tokenizer.symbol()) {
             case '=':
                 advance();
                 break;
             case '[':
+                isArrayEntry = true;
                 advance();
                 compileExpression();
                 checkToken(TokenType.TOKEN_SYMBOL);
@@ -526,7 +544,8 @@ public class CompilationEngine {
         // In case of an array entry, the stack top has the
         // expression. The second to top entry is the index
         // into the array.
-        if (symbolTable.typeOf(symbolName).equals("Array")) {
+        if (isArrayEntry) {
+            System.out.println("isArrayEntry is true");
             // pop rvalue
             codeWriter.writePop(Segment.TEMP,0);
             // set "that" segment
