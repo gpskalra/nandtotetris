@@ -104,6 +104,7 @@ public class SymbolTable {
         System.out.println("Index: " + indexOf(name));
     }
 
+
     /**
      * Returns the symbol kind given the name
      * of the symbol. Returns NONE if the symbol

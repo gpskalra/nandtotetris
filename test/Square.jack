@@ -22,7 +22,11 @@ class Square {
         var int c,d;
         var Arena e;	
     }*/ 
-    method void abc(int x) {
+    method void xyz() {
+        let y = 0;
+        return;
+    }
+    method int abc(int x) {
         let y = 5;
         if (2) {
             let y[1]=1;
@@ -33,6 +37,8 @@ class Square {
         while (1) {
             let y[2]=3;
         }
-        return; 
+        do Output.println();
+        do xyz();
+        return 10; 
     }   
 }
