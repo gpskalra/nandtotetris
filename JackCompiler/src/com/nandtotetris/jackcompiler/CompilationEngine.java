@@ -88,6 +88,9 @@ public class CompilationEngine {
         currentSubroutineType = tokenizer.keyword().getKeywordString();
         // start a new scope
         symbolTable.startSubroutine();
+        if (currentSubroutineType == "method") {
+            symbolTable.define("this",className,SymbolKind.ARG);
+        }
 
         // ignore return type, assuming error free code
         // return type: (void | type)
@@ -194,18 +197,22 @@ public class CompilationEngine {
             switch (tokenizer.keyword()) {
                 case LET:
                     compileLetStatement();
+                    advance();
                     break;
                 case IF:
                     compileIfStatement();
                     break;
                 case WHILE:
                     compileWhileStatement();
+                    advance();
                     break;
                 case DO:
                     compileDoStatement();
+                    advance();
                     break;
                 case RETURN:
                     compileReturnStatement();
+                    advance();
                     break;
                 default:
                     System.out.println("Error: In file " + tokenizer.fileName()
@@ -213,7 +220,6 @@ public class CompilationEngine {
                             + " Expected one of: let if while do return");
                     break;
             }
-            advance();
         }
     }
 
@@ -243,10 +249,10 @@ public class CompilationEngine {
      * Checks whether a given symbol is a
      * binary operator as per the jack grammar
      * @param symbol the input symbol
-     * @return true if symbol is an operator
+     * @return true if symbol is a binary operator
      *         false otherwise
      */
-    private boolean isOp(char symbol) {
+    private boolean isBinaryOp(char symbol) {
         final char[] opsArray = {'+','-','*','/','&','|','<','>','='};
         for (char s : opsArray) {
             if (symbol == s) {
@@ -261,16 +267,25 @@ public class CompilationEngine {
      */
     private void compileExpression() {
 
-        codeWriter.writePush(Segment.CONST,tokenizer.intVal());
-        advance();
-        /*
         compileTerm();
 
-        while (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
-                && isOp(tokenizer.symbol())) {
-            compileSymbol(tokenizer.symbol());
-            compileTerm();
-        }*/
+        if (tokenizer.tokenType()==TokenType.TOKEN_SYMBOL
+                && isBinaryOp(tokenizer.symbol())) {
+            char op = tokenizer.symbol();
+            advance();
+            compileExpression();
+            switch (op) {
+                case '*':
+                    codeWriter.writeCall("Math.multiply",2);
+                    break;
+                case '/':
+                    codeWriter.writeCall("Math.divide",2);
+                    break;
+                default:
+                    codeWriter.writeArithmetic(ArithmeticCommand.getCommandFromBinaryOp(op));
+                    break;
+            }
+        }
     }
 
     /**
@@ -296,62 +311,115 @@ public class CompilationEngine {
             case TOKEN_KEYWORD:
                 switch (tokenizer.keyword()) {
                     case TRUE:
+                        codeWriter.writePush(Segment.CONST,1);
+                        codeWriter.writeArithmetic(ArithmeticCommand.NEG);
+                        break;
                     case FALSE:
+                        codeWriter.writePush(Segment.CONST,0);
+                        break;
                     case NULL:
+                        codeWriter.writePush(Segment.CONST,0);
                     case THIS:
-                        compileKeyword(tokenizer.keyword());
+                        codeWriter.writePush(Segment.POINTER,0);
                         break;
                     default:
                         System.out.println("Error: In file " + tokenizer.fileName()
                                 + " line " + tokenizer.lineNumber()
                                 + " Expected one of: 'true' 'false' 'null' 'this'");
-                        System.exit(1);
                         break;
                 }
+                advance();
                 break;
             case TOKEN_SYMBOL:
                 switch (tokenizer.symbol()) {
                     case '(':
-                        compileSymbol('(');
+                        advance();
                         compileExpression();
-                        compileSymbol(')');
+                        checkToken(TokenType.TOKEN_SYMBOL);
+                        checkSymbol(')');
+                        advance();
                         break;
                     case '-':
                     case '~':
-                        compileSymbol(tokenizer.symbol());
+                        char unaryOp = tokenizer.symbol();
+                        advance();
                         compileTerm();
+                        codeWriter.writeArithmetic(ArithmeticCommand.getCommandFromUnaryOp(unaryOp));
                         break;
                     default:
                         System.out.println("Error: In file " + tokenizer.fileName()
                                 + " line " + tokenizer.lineNumber()
                                 + " Unexpected Symbol " + tokenizer.symbol());
-                        System.exit(1);
                         break;
-
                 }
                 break;
             case TOKEN_IDENTIFIER:
-                compileIdentifier();
+                int numArgs;
+                String symbolName1 = tokenizer.identifier();
+                String subroutineName;
+                SymbolKind symbolKind1;
+                advance();
+                // looks like this if loop would always be executed
+                // an identifier always seems to be followed by a symbol
                 if (tokenizer.tokenType() == TokenType.TOKEN_SYMBOL) {
-                    if (tokenizer.symbol() == '[') {
-                        compileSymbol('[');
-                        compileExpression();
-                        compileSymbol(']');
-                        break;
-                    }
-                    if (tokenizer.symbol() == '(') {
-                        compileSymbol('(');
-                        compileExpressionList();
-                        compileSymbol(')');
-                        break;
-                    }
-                    if (tokenizer.symbol() == '.') {
-                        compileSymbol('.');
-                        compileIdentifier();
-                        compileSymbol('(');
-                        compileExpressionList();
-                        compileSymbol(')');
-                        break;
+                    switch (tokenizer.symbol()) {
+                        case '[':
+                            advance();
+                            compileExpression();
+                            checkToken(TokenType.TOKEN_SYMBOL);
+                            checkSymbol(']');
+                            symbolKind1 = symbolTable.kindOf(symbolName1);
+                            int index = symbolTable.indexOf(symbolName1);
+                            codeWriter.writePush(SymbolKind.getSegment(symbolKind1),index);
+                            codeWriter.writeArithmetic(ArithmeticCommand.ADD);
+                            codeWriter.writePop(Segment.POINTER,1);
+                            codeWriter.writePush(Segment.THAT,0);
+                            advance();
+                            break;
+                        case '(':
+                            advance();
+                            codeWriter.writePush(Segment.POINTER,0);
+                            numArgs = compileExpressionList();
+                            checkToken(TokenType.TOKEN_SYMBOL);
+                            checkSymbol(')');
+                            codeWriter.writeCall(className+"."+symbolName1,numArgs+1);
+                            advance();
+                            break;
+                        case '.':
+                            advance();
+                            checkToken(TokenType.TOKEN_IDENTIFIER);
+                            String symbolName2 = tokenizer.identifier();
+                            advance();
+                            checkToken(TokenType.TOKEN_SYMBOL);
+                            checkSymbol('(');
+                            advance();
+                            symbolKind1 = symbolTable.kindOf(symbolName1);
+                            boolean isMethodCall = (symbolKind1 != SymbolKind.NONE);
+                            if (isMethodCall) {
+                                // the subroutine is a method, hence an
+                                // extra argument needs to be passed
+                                Segment memorySegment = SymbolKind.getSegment(symbolKind1);
+                                codeWriter.writePush(memorySegment,symbolTable.indexOf(symbolName1));
+                            }
+                            // pushes the arguments to the stack
+                            numArgs = compileExpressionList();
+                            checkToken(TokenType.TOKEN_SYMBOL);
+                            checkSymbol(')');
+                            if (isMethodCall) {
+                                subroutineName = symbolTable.typeOf(symbolName1)+"."+symbolName2;
+                                codeWriter.writeCall(subroutineName,numArgs+1);
+                            }
+                            else {
+                                subroutineName = symbolName1+"."+symbolName2;
+                                codeWriter.writeCall(subroutineName,numArgs);
+                            }
+                            advance();
+                            break;
+                        default:
+                            symbolKind1 = symbolTable.kindOf(symbolName1);
+                            index = symbolTable.indexOf(symbolName1);
+                            codeWriter.writePush(SymbolKind.getSegment(symbolKind1),index);
+                            break;
                     }
                 }
                 break;
@@ -464,15 +532,17 @@ public class CompilationEngine {
      */
     private void compileWhileStatement() {
 
+        int myLabelCount = labelCount;
+        labelCount = labelCount + 1;
         advance();
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('(');
         advance();
-        codeWriter.writeLabel("WHILE"+labelCount);
+        codeWriter.writeLabel("WHILE"+myLabelCount);
         compileExpression();
         codeWriter.writePush(Segment.CONST,0);
         codeWriter.writeArithmetic(ArithmeticCommand.EQ);
-        codeWriter.writeIf("IF_FALSE"+labelCount);
+        codeWriter.writeIf("IF_FALSE"+myLabelCount);
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol(')');
         advance();
@@ -480,11 +550,10 @@ public class CompilationEngine {
         checkSymbol('{');
         advance();
         compileStatements();
-        codeWriter.writeGoto("WHILE"+labelCount);
+        codeWriter.writeGoto("WHILE"+myLabelCount);
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('}');
-        codeWriter.writeLabel("IF_FALSE"+labelCount);
-        labelCount = labelCount + 1;
+        codeWriter.writeLabel("IF_FALSE"+myLabelCount);
     }
 
     /**
@@ -492,6 +561,8 @@ public class CompilationEngine {
      */
     private void compileIfStatement() {
 
+        int myLabelCount = labelCount;
+        labelCount = labelCount + 1;
         advance();
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('(');
@@ -500,7 +571,7 @@ public class CompilationEngine {
         // if condition expression is at the top of stack
         codeWriter.writePush(Segment.CONST,0);
         codeWriter.writeArithmetic(ArithmeticCommand.EQ);
-        codeWriter.writeIf("IF_FALSE"+labelCount);
+        codeWriter.writeIf("IF_FALSE"+myLabelCount);
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol(')');
         advance();
@@ -508,11 +579,11 @@ public class CompilationEngine {
         checkSymbol('{');
         advance();
         compileStatements();
-        codeWriter.writeGoto("IF_END"+labelCount);
+        codeWriter.writeGoto("IF_END"+myLabelCount);
         checkToken(TokenType.TOKEN_SYMBOL);
         checkSymbol('}');
         advance();
-        codeWriter.writeLabel("IF_FALSE"+labelCount);
+        codeWriter.writeLabel("IF_FALSE"+myLabelCount);
         if (tokenizer.tokenType()==TokenType.TOKEN_KEYWORD
                 && tokenizer.keyword()==Keyword.ELSE) {
             advance();
@@ -522,9 +593,9 @@ public class CompilationEngine {
             compileStatements();
             checkToken(TokenType.TOKEN_SYMBOL);
             checkSymbol('}');
+            advance();
         }
-        codeWriter.writeLabel("IF_END"+labelCount);
-        labelCount = labelCount + 1;
+        codeWriter.writeLabel("IF_END"+myLabelCount);
     }
 
     /**

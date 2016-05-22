@@ -12,33 +12,18 @@ class Square {
 
     // Location on the screen
     field Array y;
-
-    // The size of the square
-    // field int size;
-
-    // static Arena a,b;
-    /*
-    constructor Square new(int a,int b) {
-        var int c,d;
-        var Arena e;	
-    }*/ 
+     
     method void xyz() {
         let y = 0;
         return;
     }
+
     method int abc(int x) {
-        let y = 5;
-        if (2) {
-            let y[1]=1;
-        }
-        else {
-            let y[3]=6;
-        }
-        while (1) {
-            let y[2]=3;
-        }
-        do Output.println();
-        do xyz();
-        return 10; 
+        var char ch;
+        var String s;
+        let ch = 5;
+        let s = "A";
+        let ch = s.charAt(0);   
+        return ch; 
     }   
 }
