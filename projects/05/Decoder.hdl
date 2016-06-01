@@ -1,0 +1,47 @@
+// This file is part of the course nand2tetris.
+
+// author : Gaganpreet (gaganpreet1810@gmail.com)
+// filename: 05/Decoder.hdl
+
+/**
+ * Chip to decode 16 bit instruction coming into the CPU 
+ * into various parts: 
+ * Input    16-bit instruction
+ * Output 
+ * aLoad  : Load bit of A-register
+ * dLoad  : Load bit of D-register
+ * writeM : writeM output of the CPU
+ */
+
+CHIP Decoder {
+
+    IN  instruction[16];
+
+    OUT aLoad,
+        dLoad,
+        writeM;
+
+    PARTS:
+      
+    // aLoad
+    // aLoad = (NOT instruction[15]) OR (instruction[15] AND instruction[5])
+    // aLoad is set when the instruction is an A-instruction or when the 
+    // instruction is a C-instruction and the d1 (A destination bit) is set
+    And(a=instruction[15],b=instruction[5],out=instructionMsbAndD1Bit);
+    Not(in=instruction[15],out=notInstructionMsb);
+    Or(a=notInstructionMsb,b=instructionMsbAndD1Bit,out=aLoad);
+
+    // dLoad
+    // dLoad is set when the instruction is a C instruction and the d2 bit 
+    // is set
+    // dLoad = instruction[15] AND instruction[4]
+    And(a=instruction[15],b=instruction[4],out=dLoad);    
+
+    // writeM
+    // writeM is set when the instruction is a C-instruction and the d3 bit 
+    // is set
+    And(a=instruction[15],b=instruction[3],out=writeM);
+  
+}  
+
+

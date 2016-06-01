@@ -1,0 +1,103 @@
+function Block.new 0
+push constant 2
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push pointer 0
+call Block.draw 1
+pop temp 0
+push pointer 0
+return
+function Block.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Block.getX 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function Block.getY 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function Block.draw 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push constant 32
+push this 0
+call Math.multiply 2
+push constant 32
+push this 1
+call Math.multiply 2
+push constant 32
+push this 0
+call Math.multiply 2
+push constant 31
+add
+push constant 32
+push this 1
+call Math.multiply 2
+push constant 31
+add
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Block.erase 0
+push argument 0
+pop pointer 0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push constant 32
+push this 0
+call Math.multiply 2
+push constant 32
+push this 1
+call Math.multiply 2
+push constant 32
+push this 0
+call Math.multiply 2
+push constant 31
+add
+push constant 32
+push this 1
+call Math.multiply 2
+push constant 31
+add
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Block.move 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Block.erase 1
+pop temp 0
+push this 0
+push argument 1
+add
+pop this 0
+push this 1
+push argument 2
+add
+pop this 1
+push pointer 0
+call Block.draw 1
+pop temp 0
+push constant 0
+return

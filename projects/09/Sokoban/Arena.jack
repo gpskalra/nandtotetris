@@ -1,0 +1,36 @@
+/**
+ * Implements the arena for Sokoban Game.
+ *
+ * Since the hack platform does not provide a lot of resources
+ * , the arena is the complete screen.
+ */
+class Arena {
+
+    // dummy field
+    field int dummy;
+    
+    /** Constructs a new arena. */
+    constructor Arena new() {
+        let dummy = 0;
+        return this;
+    }
+
+    /** Deallocate object's memory. */
+    method void dispose() {
+       do Memory.deAlloc(this);
+       return;
+    }
+
+    /**
+     * Checks if the arena (screen)
+     * contains a grid location.
+     */
+    method boolean contains(int x,int y) {
+        var boolean contains;
+        let contains = ((x > 0) | (x = 0));
+        let contains = contains & (x < 16);
+        let contains = contains & ((y > 0) | (y = 0));
+        let contains = contains & (y < 8);
+        return contains;
+    }
+}

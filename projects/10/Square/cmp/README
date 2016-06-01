@@ -1,0 +1,7 @@
+This directory stores the xml files provided by the Nand To Tetris
+suite for unit testing of the jack analyser.
+
+Files: 
+
+xxxT.xml : Tokenizer output corresponding to the jack file xxx.jack.
+xxx.xml : Jack Analyser output corresponding to the jack file xxx.jack

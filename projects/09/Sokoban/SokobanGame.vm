@@ -1,0 +1,416 @@
+function SokobanGame.new 0
+push constant 6
+call Memory.alloc 1
+pop pointer 0
+call Arena.new 0
+pop this 0
+push constant 1
+push constant 2
+call Player.new 2
+pop this 1
+push constant 2
+pop this 4
+push constant 2
+pop this 5
+push this 4
+call Array.new 1
+pop this 3
+push this 4
+call Array.new 1
+pop this 2
+push constant 0
+push this 3
+add
+push constant 1
+push constant 3
+call Block.new 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 1
+push this 3
+add
+push constant 2
+push constant 4
+call Block.new 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 0
+push this 2
+add
+push constant 1
+push constant 4
+call Goal.new 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 1
+push this 2
+add
+push constant 2
+push constant 5
+call Goal.new 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push pointer 0
+return
+function SokobanGame.dispose 0
+push argument 0
+pop pointer 0
+push this 0
+call Arena.dispose 1
+pop temp 0
+push this 1
+call Player.dispose 1
+pop temp 0
+push this 2
+call Array.dispose 1
+pop temp 0
+push this 3
+call Array.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function SokobanGame.blockAt 1
+push argument 0
+pop pointer 0
+push constant 0
+push this 3
+add
+pop pointer 1
+push that 0
+pop local 0
+push local 0
+call Block.getX 1
+push argument 1
+eq
+push local 0
+call Block.getY 1
+push argument 2
+eq
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push constant 1
+push this 3
+add
+pop pointer 1
+push that 0
+pop local 0
+push local 0
+call Block.getX 1
+push argument 1
+eq
+push local 0
+call Block.getY 1
+push argument 2
+eq
+and
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+return
+label IF_FALSE1
+push constant 1
+neg
+return
+function SokobanGame.goalAt 1
+push argument 0
+pop pointer 0
+push constant 0
+push this 2
+add
+pop pointer 1
+push that 0
+pop local 0
+push local 0
+call Goal.getX 1
+push argument 1
+eq
+push local 0
+call Goal.getY 1
+push argument 2
+eq
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push constant 1
+push this 2
+add
+pop pointer 1
+push that 0
+pop local 0
+push local 0
+call Goal.getX 1
+push argument 1
+eq
+push local 0
+call Goal.getY 1
+push argument 2
+eq
+and
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+return
+label IF_FALSE1
+push constant 1
+neg
+return
+function SokobanGame.moveBlock 5
+push argument 0
+pop pointer 0
+push argument 1
+push this 3
+add
+pop pointer 1
+push that 0
+pop local 4
+push local 4
+call Block.getX 1
+pop local 0
+push local 4
+call Block.getY 1
+pop local 1
+push local 0
+push argument 2
+add
+pop local 2
+push local 1
+push argument 3
+add
+pop local 3
+push this 0
+push local 2
+push local 3
+call Arena.contains 3
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 4
+push argument 2
+push argument 3
+call Block.move 3
+pop temp 0
+push pointer 0
+push local 2
+push local 3
+call SokobanGame.goalAt 3
+push constant 1
+neg
+eq
+not
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 5
+push constant 1
+sub
+pop this 5
+label IF_FALSE1
+label IF_FALSE0
+push constant 0
+return
+function SokobanGame.movePlayer 5
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+eq
+push argument 2
+push constant 0
+eq
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push this 1
+call Player.getX 1
+pop local 0
+push this 1
+call Player.getY 1
+pop local 1
+push local 0
+push argument 1
+add
+pop local 2
+push local 1
+push argument 2
+add
+pop local 3
+push this 0
+push local 2
+push local 3
+call Arena.contains 3
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+push local 2
+push local 3
+call SokobanGame.blockAt 3
+pop local 4
+push local 4
+push constant 1
+neg
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push this 1
+push argument 1
+push argument 2
+call Player.move 3
+pop temp 0
+goto IF_END2
+label IF_FALSE2
+push pointer 0
+push local 4
+push argument 1
+push argument 2
+call SokobanGame.moveBlock 4
+pop temp 0
+push pointer 0
+push local 2
+push local 3
+call SokobanGame.blockAt 3
+pop local 4
+push local 4
+push constant 1
+neg
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 1
+push argument 1
+push argument 2
+call Player.move 3
+pop temp 0
+label IF_FALSE3
+label IF_END2
+label IF_FALSE1
+push constant 0
+return
+function SokobanGame.run 4
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+push constant 0
+pop local 1
+push constant 0
+pop local 3
+label WHILE_EXP0
+push local 3
+not
+push this 5
+push constant 0
+gt
+and
+not
+if-goto WHILE_END0
+call Keyboard.keyPressed 0
+pop local 2
+label WHILE_EXP1
+push local 2
+push constant 133
+gt
+push local 2
+push constant 130
+lt
+or
+push local 2
+push constant 113
+eq
+not
+and
+not
+if-goto WHILE_END1
+call Keyboard.keyPressed 0
+pop local 2
+goto WHILE_EXP1
+label WHILE_END1
+push local 2
+push constant 113
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+not
+pop local 3
+label IF_FALSE0
+push local 2
+push constant 130
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+neg
+pop local 0
+label IF_FALSE1
+push local 2
+push constant 131
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 1
+neg
+pop local 1
+label IF_FALSE2
+push local 2
+push constant 132
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 1
+pop local 0
+label IF_FALSE3
+push local 2
+push constant 133
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push constant 1
+pop local 1
+label IF_FALSE4
+push pointer 0
+push local 0
+push local 1
+call SokobanGame.movePlayer 3
+pop temp 0
+push constant 0
+pop local 0
+push constant 0
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return

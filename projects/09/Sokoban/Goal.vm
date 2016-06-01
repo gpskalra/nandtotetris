@@ -1,0 +1,53 @@
+function Goal.new 0
+push constant 2
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push pointer 0
+call Goal.draw 1
+pop temp 0
+push pointer 0
+return
+function Goal.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Goal.getX 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function Goal.getY 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function Goal.draw 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push constant 32
+push this 0
+call Math.multiply 2
+push constant 16
+add
+push constant 32
+push this 1
+call Math.multiply 2
+push constant 16
+add
+push constant 15
+call Screen.drawCircle 3
+pop temp 0
+push constant 0
+return

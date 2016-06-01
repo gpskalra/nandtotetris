@@ -1,0 +1,175 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/String.jack
+
+/**
+ * Represents a String object. Implements the String type.
+ */
+class String {
+
+    field Array array;
+    field int len;
+    field int maxL;
+
+    /** Constructs a new empty String with a maximum length of maxLength. */
+    constructor String new(int maxLength) {
+        if (maxLength < 0) {
+            do Sys.error(14);
+            return this;            
+        }
+        let len = 0;
+        let maxL = maxLength;
+        if (maxL > 0) {
+            let array = Array.new(maxL);
+        }
+        return this;         
+    }
+
+    /** De-allocates the string and frees its space. */
+    method void dispose() {
+        if (maxL > 0) {
+            do array.dispose();
+        }
+        do Memory.deAlloc(this); 
+        return;
+    }
+
+    /** Returns the current length of this String. */
+    method int length() {
+        return len;
+    }
+
+    /** Returns the character at location j. */
+    method char charAt(int j) {
+        if (~(j < len)) {
+            do Sys.error(15);
+            return 0;
+        }
+        return array[j];
+    }
+
+    /** Sets the j'th character of this string to be c. */
+    method void setCharAt(int j, char c) {
+        if (~(j < len)) {
+            do Sys.error(16);
+            return;
+        }
+        let array[j] = c;
+        return;
+    }
+
+    /** Appends the character c to the end of this String.
+     *  Returns this string as the return value. */
+    method String appendChar(char c) {
+        if (len = maxL) {
+            do Sys.error(17);
+            return this;
+        }
+        let array[len] = c;
+        let len = len + 1;
+        return this;
+    }
+
+    /** Erases the last character from this String. */
+    method void eraseLastChar() {
+        if (len = 0) {
+            do Sys.error(18);
+            return;
+        }
+        let len = len - 1;
+        return;
+    }
+
+    /** Returns the integer value of this String until the first non
+     *  numeric character. */
+    method int intValue() {
+        var int abs,index;
+        var boolean sign;
+        let abs = 0;
+        let sign = false;
+        let index = 0;
+        if (len > 0) {
+            if (array[0]=45) { // '-'
+                let sign = true;
+                let index = index + 1;
+            }
+            while ((index < len) & (~(array[index] > 57)) & (~(array[index] < 48))) {
+                let abs = Math.multiply(abs,10);
+                let abs = abs + (array[index] - 48);
+                let index = index + 1;
+            }
+        }
+        if (sign) {
+            return -abs;
+        }
+        else {
+            return abs;
+        }
+    }
+
+    function int mod(int x, int y) {
+        var int q;
+        let q = Math.divide(x,y);
+        return x - (q*y); 
+    }
+
+    function int numDigits(int number) {
+        var int result;
+        let result = 0;
+        if (number = 0) {
+            return 1;
+        }
+        while (number > 0) {
+            let number = number/10;
+            let result = result + 1;
+        }
+        return result;
+    }
+
+    /** Sets this String to hold a representation of the given number.*/
+    method void setInt(int number) {
+        var int reqLength,nDigits,index,toPlace;
+        var boolean sign;
+        let reqLength = 0;
+        if (number < 0) {
+            let number = -number;
+            let reqLength = reqLength + 1;
+            let sign = true;
+        }
+        let nDigits = String.numDigits(number);
+        let reqLength = reqLength + nDigits;
+        if (reqLength > maxL) {
+            do Sys.error(19);
+            return;
+        }
+        let index = -1;
+        if (sign) {
+            let array[0] = 45; // '-'
+            let index = index + 1;
+        }
+        let toPlace = nDigits;
+        while (toPlace > 0) {
+            let array[index + toPlace] = String.mod(number,10)+48;
+            let toPlace = toPlace - 1;
+            let number = number / 10; 
+        }
+        let len = reqLength;
+        return; 
+    }
+
+    /** Returns the new line character. */
+    function char newLine() {
+        return 128;
+    }
+
+    /** Returns the backspace character. */
+    function char backSpace() {
+        return 129;
+    }
+
+    /** Returns the double quote (") character. */
+    function char doubleQuote() {
+        return 34;
+    }
+}

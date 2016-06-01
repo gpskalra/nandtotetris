@@ -1,0 +1,169 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+
+/**
+ * Graphic screen library.
+ */
+class Screen {
+ 
+    static boolean color;
+
+    /** Initializes the Screen. */
+    function void init() {
+        do Screen.clearScreen();
+        return;
+    }
+
+    /** Erases the whole screen. */
+    function void clearScreen() {
+        var int limit,addr;
+        let addr = 16384;
+        let limit = 16384 + (256*32);
+        while (addr < limit){
+            do Memory.poke(addr,0);
+            let addr = addr + 1;
+        }
+        return;
+    }
+
+    /** Sets the color to be used in further draw commands
+     *  where white = false, black = true. */
+    function void setColor(boolean b) {
+        let color = b;
+        return;
+    }
+
+    /** Draws the (x, y) pixel. */
+    function void drawPixel(int x, int y) {
+        var int addr,value;
+        if ((x < 0)|(x > 511)|(y < 0)|(y > 255)) {
+            do Sys.error(7);
+        }
+        let addr = 16384 + (y*32) + (x/16);
+        let value = Memory.peek(addr);
+        let value = Math.setBit(value,Math.mod(x,16),color);
+        do Memory.poke(addr,value);
+        return;
+    }
+
+    /** Draws a line from (x1, y1) to (x2, y2). */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int a,b,c,d,dx,dy,diff;
+        var boolean signDx,signDy;
+        if ((x1<0)|(x1>511)|(y1<0)|(y1>255)|
+            (x2<0)|(x2>511)|(y2<0)|(y2>255)) {
+            do Sys.error(8);
+        }
+        let a = 0;
+        let b = 0;
+        let dx = Math.abs(x2 - x1);
+        let dy = Math.abs(y2 - y1);
+        let signDx = false;
+        let signDy = false;
+        if (x2 < x1) {
+            let signDx = true;
+        }
+        if (y2 < y1) {
+            let signDy = true;
+        }
+        if (dx = 0) {
+            while(~(b > dy)) {
+                if (signDy) {
+                    let d = -b;
+                }
+                else {
+                    let d = b;
+                }
+                do Screen.drawPixel(x1,y1+d);
+                let b = b + 1;
+            }
+            return;
+        }
+        if (dy = 0) {
+            while(~(a > dx)) {
+                if (signDx) {
+                    let c = -a;
+                }
+                else {
+                    let c = a;
+                }
+                do Screen.drawPixel(x1+c,y1);
+                let a = a + 1;
+            }
+            return;
+        }
+        while((~(a > dx))&(~(b > dy))) {
+            if (x2 < x1) {
+                let c = -a;
+            }
+            else {
+                let c = a; 
+            }
+            if (y2 < y1) {
+                let d = -b;
+            }
+            else {
+                let d = b; 
+            }
+            do Screen.drawPixel(x1+c,y1+d);
+            let diff = (a*dy)-(b*dx);
+            if (diff < 0) {
+                let a = a + 1;
+            }
+            else {
+                let b = b + 1;
+            }
+        }     
+        return;
+    }
+
+    /** Draws a filled rectangle where the top left corner
+     *  is (x1, y1) and the bottom right corner is (x2, y2). */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int y;
+        if ((x1<0)|(x1>511)|(x2<0)|(x2>511)|(y1<0)|(y1>255)|
+            (y2<0)|(y2>255)) {
+            do Sys.error(9);
+        }
+        if (y1 < y2) {
+            let y = y1;
+            while (~(y > y2)) {
+                do Screen.drawLine(x1,y,x2,y);
+                let y = y + 1;
+            }
+        }
+        else {
+            let y = y2;
+            while (~(y > y1)) {
+                do Screen.drawLine(x1,y,x2,y);
+                let y = y + 1;
+            }
+        }
+        return;
+    }
+
+    /** Draws a filled circle of radius r around (cx, cy). */
+    function void drawCircle(int cx, int cy, int r) {
+        var int dy,r2,dy2,w,w2;
+        if ((cx>511)|(cx<0)|(cy>255)|(cy<0)) {
+            do Sys.error(12);
+        }
+        if (((cx-r)<0)|((cx+r)>511)|((cy-r)<0)|((cy+r)>255)) {
+            do Sys.error(13);
+        }
+        let dy = 0;
+        let r2 = Math.multiply(r,r);
+        while(~(dy>r)) {
+            let w2 = Math.multiply(r-dy,r+dy);
+            let w = Math.sqrt(w2);
+            // let dy2 = Math.multiply(dy2,dy2);
+            // let w = Math.sqrt(r2-dy2);
+            do Screen.drawLine(cx-w,cy-dy,cx+w,cy-dy); 
+            do Screen.drawLine(cx-w,cy+dy,cx+w,cy+dy); 
+            let dy = dy + 1;
+        }         
+        return;
+    }
+}

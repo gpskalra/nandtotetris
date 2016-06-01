@@ -1,0 +1,67 @@
+/**
+ * Implements a block which is to be pushed
+ * in the Sokoban game.
+ *
+ * A block is represented by a 32x32 pixel black
+ * square on the screen.
+ */
+class Block {
+
+    // The grid location
+    // 0 <= x < 16
+    // 0 <= y < 8
+    field int x;
+    field int y;
+
+    /**
+     * Constructs a new block with the given (x,y) grid
+     * coordinates.
+     */
+    constructor Block new(int gridX,int gridY) {
+       let x = gridX;
+       let y = gridY;
+       do draw();
+       return this;
+    }
+
+    /** Deallocates the object's memory. */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Getter for x coordinate. */
+    method int getX() {
+        return x;
+    }
+
+    /** Getter for y coordinate. */
+    method int getY() {
+        return y;
+    }
+
+    /** Draws the block on the screen */
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(32*x,32*y,(32*x) + 31,
+                                (32*y) + 31);
+        return;
+    }
+
+    /** Erases the block from the screen. */
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(32*x,32*y,(32*x) + 31,
+                                (32*y) + 31);
+        return;
+    }
+
+    /** Moves the block one step in the given direction. */
+    method void move(int dirX,int dirY) {
+        do erase();
+        let x = x + dirX;
+        let y = y + dirY;
+        do draw();
+        return;
+    }
+}

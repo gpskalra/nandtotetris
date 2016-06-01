@@ -1,0 +1,26 @@
+#!/bin/bash
+
+ASSEMBLERPATH=".."
+JAVACOMMAND="java -cp $ASSEMBLERPATH/MyAssembler/bin com/nandtotetris/myassembler/MyAssembler"
+
+function assembleAndVerify {
+
+    ASMFILEPATH="$ASSEMBLERPATH/$1/$1$2.asm"
+    $JAVACOMMAND $ASMFILEPATH
+    HACKFILEPATH="$ASSEMBLERPATH/$1/$1$2.hack" 
+    CMPFILEPATH="$ASSEMBLERPATH/$1/$1$2.cmp"
+
+    DIFF=$(diff $HACKFILEPATH $CMPFILEPATH) 
+    if [ "$DIFF" == "" ] 
+     then
+     echo "$1$2 output verified"
+    fi
+}
+
+assembleAndVerify add
+assembleAndVerify max
+assembleAndVerify max L
+assembleAndVerify pong
+assembleAndVerify pong L
+assembleAndVerify rect
+assembleAndVerify rect L

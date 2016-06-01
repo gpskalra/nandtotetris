@@ -1,0 +1,166 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Math.jack
+
+/**
+ * A basic math library.
+ */
+class Math {
+
+    static Array twoToThe;
+    static int partialProduct;
+
+    /** Initializes the library. */
+    function void init() {
+        var int powerOfTwo;
+        var int index;
+        let index = 0;
+        let powerOfTwo = 1;
+        let twoToThe = Array.new(16);
+        while (index < 16) {
+            let twoToThe[index] = powerOfTwo;
+            let index = index + 1;
+            let powerOfTwo = powerOfTwo + powerOfTwo; 
+        }
+        return;
+    }
+
+    function int mod(int x, int y) {
+        var int q;
+        let q = Math.divide(x,y);
+        return x - (q*y); 
+    }
+  
+    /** Returns the jth bit of y. */
+    function boolean bit(int y, int j) {
+        return (y & twoToThe[j]);
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        }
+        else {
+            return x;
+        }
+    }
+
+    /** Returns the product of x and y. */
+    function int multiply(int x, int y) {
+        var int result;
+        var int index;
+        var int shiftedX;
+        let shiftedX = x;
+        let result = 0;
+        let index = 0;
+        // do Output.printString("x = ");
+        // do Output.printInt(x);
+        // do Output.println();
+        // do Output.printString("y = ");
+        // do Output.printInt(y);
+        // do Output.println();
+        while (index < 16) {
+            if (Math.bit(y,index)) {
+                // do Output.printString("Bit ");
+                // do Output.printInt(index);
+                // do Output.printString(" of y is 1");
+                // do Output.println();
+                let result = result + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let index = index + 1;
+        }
+        return result;
+    }
+    /** Divides one positive integer x with 
+        positive integer y.*/
+    function int absDivide(int x, int y) {
+        var int q,r;
+        if ((y < 0) | (y > x)) {
+            return 0;
+        }
+        if (y = x) {
+            let partialProduct = y;
+            return 1;
+        }
+        let q = Math.absDivide(x,y+y);
+        if (q = 0) {
+            let partialProduct = y;
+            return 1;
+        }
+        let r = x - partialProduct;
+        if ((r > y) | (r = y)) {
+            let partialProduct = partialProduct + y;
+            return q + q + 1;
+        }
+        else {
+            return q + q;
+        }
+    }
+
+    /** Returns the integer part of x/y. */
+    function int divide(int x, int y) {
+        var int positiveX,positiveY,q;
+        var int result;
+        var boolean sign;
+        // false = positive, true = negative
+        let sign = false;
+        let positiveX = x;
+        let positiveY = y;
+        if (y = 0) {
+            do Sys.error(3);
+            return 0;
+        }
+        if (x < 0) {
+            let positiveX = -x;
+            let sign = ~sign;
+        }
+        if (y < 0) {
+            let positiveY = -y;
+            let sign = ~sign;
+        }
+        let q = Math.absDivide(positiveX,positiveY);
+        if (sign) {
+            let q = -q;
+        }
+        return q;     
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int result,index,temp,square;
+        if (x < 0) {
+            do Sys.error(4);
+            return 0;
+        }
+        let result = 0;
+        let index = 7;
+        while (~(index < 0)) {
+            let temp = result + twoToThe[index];
+            let square = Math.multiply(temp,temp);
+            if ((~(square < 0))&(~(square > x))) {
+                let result = temp;   
+            }             
+            let index = index - 1;
+        }
+        return result;
+    }
+
+    /** Returns the greater number. */
+    function int max(int a, int b) {
+        if (a > b) {
+            return a;
+        }
+        return b;
+    }
+
+    /** Returns the smaller number. */
+    function int min(int a, int b) {
+        if (a < b) {
+            return a;
+        }
+        return b;
+    }
+}

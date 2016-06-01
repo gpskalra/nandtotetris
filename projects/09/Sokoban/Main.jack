@@ -1,0 +1,18 @@
+/**
+ * The main class initializes a new Sokoban game and starts it
+ */
+class Main {
+
+    /** Initializes a new game and starts it. */
+    function void main() {
+
+        var SokobanGame game;
+
+        let game = SokobanGame.new();
+
+        do game.run();
+        do game.dispose();
+
+        return;
+    }
+}

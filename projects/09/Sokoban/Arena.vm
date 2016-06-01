@@ -1,0 +1,51 @@
+function Arena.new 0
+push constant 1
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+pop this 0
+push pointer 0
+return
+function Arena.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Arena.contains 1
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+gt
+push argument 1
+push constant 0
+eq
+or
+pop local 0
+push local 0
+push argument 1
+push constant 16
+lt
+and
+pop local 0
+push local 0
+push argument 2
+push constant 0
+gt
+push argument 2
+push constant 0
+eq
+or
+and
+pop local 0
+push local 0
+push argument 2
+push constant 8
+lt
+and
+pop local 0
+push local 0
+return
